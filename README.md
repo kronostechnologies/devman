@@ -5,9 +5,11 @@ devman
 
 **WORK IN PROGRESS**
 
-If you don't want to wait, use git-repo. 
+If you don't want to wait, use git-repo instead. 
 
-Manage your git repositories with workflow in mind.
+-------------------------------------------------------------------------------------------------
+
+Manage your git repositories with your Workflow in mind.
 
  * Fork this repo
  * Create your configuration files
