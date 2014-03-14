@@ -52,66 +52,62 @@ It can be used to manage your git repositories
     devman -h
     
     # git pull --rebase for all your repos (TODO)
-    
     devman [ff] [<group>]
     
     # checkout all branches to specific branch name (TODO)
-    
     devman [co] <branch_name> [<group>] 
     
     # tag all repos in one group (not implemented yet)
-    
     devman [t] <tag_name> [<group>] 
     
     # push all repos to origin (not implemented yet -- no upstream by default?)
-    
     devman [p] [<group>] 
 
 ### Windows (Cygwin)
   
-  C:/Python27/python.exe ./devman -h
+    C:/Python27/python.exe ./devman -h
 
 ## INSTALL
 ### Linux
     
-  aptitude install git python-pip
-  pip install gitpython
+    aptitude install git python-pip
+    pip install gitpython
 
 ### Mac
 
-  *Please contribute.*
+    *Please contribute.*
 
 ### Windows (on cygwin)
 
 Manually install msysgit
 
-  https://code.google.com/p/msysgit/downloads/list?q=full+installer+official+git)
+    https://code.google.com/p/msysgit/downloads/list?q=full+installer+official+git)
 
-  https://msysgit.googlecode.com/files/Git-1.8.5.2-preview20131230.exe 
+    https://msysgit.googlecode.com/files/Git-1.8.5.2-preview20131230.exe 
 
 Install git-credential-winstore (to save your credentials with your session)
 
-  http://gitcredentialstore.codeplex.com/releases/view/106064)
+    http://gitcredentialstore.codeplex.com/releases/view/106064)
  
 Manually install Python 2.7.6 (or version if you'd like to test it
 
-  http://www.python.org/ftp/python/2.7.6/python-2.7.6.amd64.msi) 
+    http://www.python.org/ftp/python/2.7.6/python-2.7.6.amd64.msi) 
 
 Manually install dependencies in git-bash  / Cygwin
 
-  cd /tmp
+    cd /tmp
 
-  curl -o ez_setup.py https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py 
+    curl -o ez_setup.py https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
 
-  C:/Python27/python.exe ez_setup.py
+    C:/Python27/python.exe ez_setup.py
 
-  curl -o git-python.tar.gz https://pypi.python.org/packages/source/G/GitPython/GitPython-0.3.2.RC1.tar.gz
+    curl -o git-python.tar.gz https://pypi.python.org/packages/source/G/GitPython/GitPython-0.3.2.RC1.tar.gz
 
-  tar.exe xfpv git-python.tar.gz 
+    tar.exe xfpv git-python.tar.gz 
 
-  cd GitPython-0.3.2.RC1/
+    cd GitPython-0.3.2.RC1/
 
-  C:/Python27/python.exe ./setup.py install
+    C:/Python27/python.exe ./setup.py install
 
 > We simply install git, python, SetupTools and GitPython. Beware that you might have to tweak this tool a little bit.
 
