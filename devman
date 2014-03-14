@@ -1,0 +1,110 @@
+#!/usr/bin/python -tt
+# vim: tabstop=4 expandtab shiftwidth=2 softtabstop=2
+
+
+## TODO: handle cases for multiple usages
+# - Create class and setup.py
+# - Extract configuration to file
+# - manage standard repositories (used all the time)
+# - manage libraries (owned by kronostechnologies-build@github)
+# - manage mass update
+# - manage mass branch switch
+
+# TODO: install the following packages
+# aptitude install python-pip git 
+# pip install gitpython
+# aptitude install puppet (will be done on server)
+
+import subprocess
+import popen2
+from git import Repo
+from git.util import RemoteProgress
+from git import GitCommandError
+
+# to check operating system now running.
+import platform
+import sys
+
+class DisProgress(RemoteProgress):
+  def line_dropped(self, line):
+    print('{0}'.format(line))
+  def update(self, op_code, cur_count, max_count=None, message=''):
+    print('{0} {1}/{2} {3}'.format(op_code, cur_count, max_count, message))
+
+def sh(cmd):
+  try: 
+    output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+  except Exception, e:
+    output = str(e.output)
+  return output  
+
+# TODO: export to YAML
+git_repos = { 
+  'test': 'svigneux/python-wsh.git', 
+}
+
+# check if github is configured
+os = platform.system()
+
+if os == 'Linux':
+  install_path = '/srv/projects/'
+  git_url = 'git@github.com:'
+  git_binary  = sh("which git")
+  git_login = sh("ssh git@github.com")
+elif os == 'Windows':
+  install_path = 'c:/srv/projects/'
+  git_url = 'https://github.com/'
+  git_binary  = sh("c:/vagrant/embedded/mingw/bin/which.exe git")
+  git_login = sh("ssh git@github.com")
+elif os == 'Mac':
+  install_path = '/srv/projects/'
+  git_url = 'git@github.com:'
+  git_binary  = sh("which git")
+  git_login = sh("ssh git@github.com")
+elif os == 'CYGWIN_NT-6.1':
+  install_path = '/c/srv/projects/'
+  git_url = 'git@github.com:'
+  git_binary  = sh("which git")
+  git_login = sh("ssh git@github.com")
+else: 
+  print 'OS not supported yet'
+  print os
+  exit(1)
+
+if git_binary.find("git") == -1:
+  print "Please install git before you proceed any further."
+  exit(1)
+#if git_login.find("Permission denied (publickey).") != -1: 
+#  print "Please configure github ssh access prior running this tool."
+#  exit(1)
+else: 
+  sh("mkdir -p /srv/projects/")
+
+  for repo_name, repo_url in git_repos.items(): 
+    repo_path = install_path + repo_name
+    remote_url = git_url + repo_url
+    
+    # make sure a repository has been created.
+    try: 
+      repo = Repo(repo_path)
+    except :
+      print "Repository " + repo_name + " has not yet been created. Doing so now."
+      try:
+        this_repo = Repo.clone_from(remote_url, repo_path , progress = DisProgress())
+        for submodule in this_repo.submodules:
+          print "Now Initializing submodule:" + str(submodule)
+          submodule.update(progress = DisProgress())
+      except GitCommandError as e:
+        print "Error cloning repository: " + str(e)
+
+    
+    repo = Repo(repo_path)
+      
+    if repo.bare == True:
+      print "Cannot process bare repo: " + repo_name
+    elif repo.is_dirty() :
+      print "Cannot process dirty repo: " + repo_name
+    else:
+      print "Pulling " + repo_url + " from origin"
+      o = repo.remotes.origin
+      o.pull()
