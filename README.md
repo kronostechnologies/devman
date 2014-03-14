@@ -49,23 +49,23 @@ It can be used to manage your git repositories
 ## USAGE
 ### Linux / Mac
 
-  devman -h
-
-  # git pull --rebase for all your repos (TODO)
-
-  devman [ff] [<group>]
-
-  # checkout all branches to specific branch name (TODO)
-
-  devman [co] <branch_name> [<group>] 
-
-  # tag all repos in one group (not implemented yet)
-
-  devman [t] <tag_name> [<group>] 
-
-  # push all repos to origin (not implemented yet -- no upstream by default?)
-
-  devman [p] [<group>] 
+    devman -h
+    
+    # git pull --rebase for all your repos (TODO)
+    
+    devman [ff] [<group>]
+    
+    # checkout all branches to specific branch name (TODO)
+    
+    devman [co] <branch_name> [<group>] 
+    
+    # tag all repos in one group (not implemented yet)
+    
+    devman [t] <tag_name> [<group>] 
+    
+    # push all repos to origin (not implemented yet -- no upstream by default?)
+    
+    devman [p] [<group>] 
 
 ### Windows (Cygwin)
   
