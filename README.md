@@ -6,29 +6,25 @@ devman
 WORK IN PROGRESS
 A python git repository manager.
 
-It can be used to manage your team git repositories. 
+It can be used to manage your git repositories 
 
  * Fork this repo
  * Create your configuration files
- * Have your team install devman from your fork.
- * Stay up to date with our repository. 
- * Send a pull request to add new features.  
+ * Have your team install devman from your fork
+ * Stay up to date with our repository
+ * Send a pull request to add new features
 
-**Use case:**
+**Use case**
 
-You have many teams working on different sets of repos and want a centralized, clear way to tell people what repo they need to clone for which project.
+ * You have many teams working on different sets of repos and want a centralized, clear way to tell people what repo they need to clone for which project.
 
+ * You have multiple systems and want them to always have the same repos. (ie: desktop & laptop)
 
-You have multiple systems and want them to always have the same repos. (ie: desktop & laptop)
+ * You work on multiple projects that contain multiple repos and want to manage them from a unique tool. 
 
-You work on multiple projects that contain multiple repos and want to manage them from a unique tool. 
+ * You are somewhat bored of cd'ing into your repos and want to control a specific repo, or group from any shell. 
 
-You are somewhat bored of cd'ing into your repos and want to control a specific repo, or group from any shell. 
-
-You are most tired of clicking on your GUI to update all your repos and want to get up to speed with CLI users. ;-)
-
-You are an automation aficionado, and can't imagine yourself doing repetitive tasks. 
-
+ * You are most tired of clicking on your GUI to update all your repos and want to get up to speed with CLI users. ;-)
 
 ## Prerequisites
 
@@ -36,33 +32,40 @@ You are an automation aficionado, and can't imagine yourself doing repetitive ta
 
   - python is installed on your system.
 
-  - your github ssh access is configured for :
-    * key-based access or,
-    * https access (using a .netrc file), or 
-    * using git-credential-winstore plugin (Windows).
+  - your github ssh access is configured for
+    * key-based access or
+    * https access (using a .netrc file) or 
+    * using git-credential-winstore plugin (Windows)
 
 ## SETUP
+
   * Configure repo groups in yaml files group-name.yaml in "repos" folder
     * Each group contains a set of repos that are managed as a whole.
     * You then refer to a group of repositories when you want to do an operation.
   * When you specify no arguments, all groups are processed. 
- 
- # git pull --rebase for all your repos (TODO)
- devman [ff] [<group>]
 
- # checkout all branches to specific branch name (TODO)
- devman [co] <branch_name> [<group>] 
 
- # tag all repos in one group (not implemented yet)
- devman [t] <tag_name> [<group>] 
-
- # push all repos to origin (not implemented yet -- no upstream by default?)
- devman [p] [<group>] 
 
 ## USAGE
 ### Linux / Mac
 
   devman -h
+
+  # git pull --rebase for all your repos (TODO)
+
+  devman [ff] [<group>]
+
+  # checkout all branches to specific branch name (TODO)
+
+  devman [co] <branch_name> [<group>] 
+
+  # tag all repos in one group (not implemented yet)
+
+  devman [t] <tag_name> [<group>] 
+
+  # push all repos to origin (not implemented yet -- no upstream by default?)
+
+  devman [p] [<group>] 
 
 ### Windows (Cygwin)
   
