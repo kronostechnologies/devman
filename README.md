@@ -3,15 +3,17 @@
 devman
 ======
 
-WORK IN PROGRESS
-A python git repository manager.
+**WORK IN PROGRESS**
 
-It can be used to manage your git repositories 
+If you don't want to wait, use git-repo. 
+
+Manage your git repositories with workflow in mind.
 
  * Fork this repo
  * Create your configuration files
- * Have your team install devman from your fork
- * Stay up to date with our repository
+ * Clone devman from your fork (you and your team)
+ * Use devman
+ * Stay up to date with our repository (fetch upstream)
  * Send a pull request to add new features
 
 **Use case**
@@ -111,4 +113,3 @@ Manually install dependencies in git-bash  / Cygwin
 
 > We simply install git, python, SetupTools and GitPython. Beware that you might have to tweak this tool a little bit.
 
-git-repo already exists for this, you might want to look there.
