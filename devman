@@ -1,110 +1,340 @@
 #!/usr/bin/python -tt
-# vim: tabstop=4 expandtab shiftwidth=2 softtabstop=2
-
+# vim: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 ## TODO: handle cases for multiple usages
-# - Create class and setup.py
-# - Extract configuration to file
+# - Create setup.py
 # - manage standard repositories (used all the time)
 # - manage libraries (owned by kronostechnologies-build@github)
 # - manage mass update
 # - manage mass branch switch
-
-# TODO: install the following packages
-# aptitude install python-pip git 
-# pip install gitpython
-# aptitude install puppet (will be done on server)
-
 import subprocess
 import popen2
 from git import Repo
 from git.util import RemoteProgress
 from git import GitCommandError
+from git import NoSuchPathError
+from git import InvalidGitRepositoryError
+
+from argparse import ArgumentParser
+from argparse import SUPPRESS
+from ConfigParser import SafeConfigParser
+import yaml
 
 # to check operating system now running.
 import platform
 import sys
 
+# to figure out in which folder we are running
+import os
+import pprint as pp
+
+######
+debug = False
+install_dir = os.path.dirname(os.path.realpath(__file__))
+######
+
 class DisProgress(RemoteProgress):
-  def line_dropped(self, line):
-    print('{0}'.format(line))
-  def update(self, op_code, cur_count, max_count=None, message=''):
-    print('{0} {1}/{2} {3}'.format(op_code, cur_count, max_count, message))
+  if debug:
+    def line_dropped(self, line):
+      print('{0}'.format(line))
+    def update(self, op_code, cur_count, max_count=None, message=''):
+      print('{0} {1}/{2} {3}'.format(op_code, cur_count, max_count, message))
 
-def sh(cmd):
-  try: 
-    output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
-  except Exception, e:
-    output = str(e.output)
-  return output  
+def flatten(lst):
+  return sum( ([x] if not isinstance(x, list) else flatten(x)
+         for x in lst), [] )
 
-# TODO: export to YAML
-git_repos = { 
-  'test': 'svigneux/python-wsh.git', 
-}
+class DevMan:
 
-# check if github is configured
-os = platform.system()
+  def __init__(self):
+    self.config = self.loadConfig()
 
-if os == 'Linux':
-  install_path = '/srv/projects/'
-  git_url = 'git@github.com:'
-  git_binary  = sh("which git")
-  git_login = sh("ssh git@github.com")
-elif os == 'Windows':
-  install_path = 'c:/srv/projects/'
-  git_url = 'https://github.com/'
-  git_binary  = sh("c:/vagrant/embedded/mingw/bin/which.exe git")
-  git_login = sh("ssh git@github.com")
-elif os == 'Mac':
-  install_path = '/srv/projects/'
-  git_url = 'git@github.com:'
-  git_binary  = sh("which git")
-  git_login = sh("ssh git@github.com")
-elif os == 'CYGWIN_NT-6.1':
-  install_path = '/c/srv/projects/'
-  git_url = 'git@github.com:'
-  git_binary  = sh("which git")
-  git_login = sh("ssh git@github.com")
-else: 
-  print 'OS not supported yet'
-  print os
-  exit(1)
+    # extract useful information from arguments
+    self.args = self.argument_parser()
+    self.command = self.args.cmd
+    self.groups = flatten(self.args.groups)
 
-if git_binary.find("git") == -1:
-  print "Please install git before you proceed any further."
-  exit(1)
-#if git_login.find("Permission denied (publickey).") != -1: 
-#  print "Please configure github ssh access prior running this tool."
-#  exit(1)
-else: 
-  sh("mkdir -p /srv/projects/")
+    #print self.command 
+    #print self.groups
 
-  for repo_name, repo_url in git_repos.items(): 
-    repo_path = install_path + repo_name
-    remote_url = git_url + repo_url
+    # TODO: set default group from config
+    if self.groups == []:
+      print 'Using default group as no argument has been given'
+      self.groups.append('dev')
+
+    target_os = platform.system()
+
+    # TODO: use config
+    if target_os == 'Linux':
+      self.install_path = '/srv/projects/'
+      self.git_url = 'git@github.com:'
+      self.git_binary  = self.sh("which git")
+      self.git_login = self.sh("ssh git@github.com")
+    elif target_os == 'Windows':
+      self.install_path = 'c:/srv/projects/'
+      self.git_url = 'https://github.com/'
+      self.git_binary  = self.sh("c:/vagrant/embedded/mingw/bin/which.exe git")
+      self.git_login = self.sh("ssh git@github.com")
+    elif target_os == 'Darwin':
+      self.install_path = '/srv/projects/'
+      self.git_url = 'git@github.com:'
+      self.git_binary  = self.sh("which git")
+      self.git_login = self.sh("ssh git@github.com")
+    elif target_os == 'CYGWIN_NT-6.1':
+      self.install_path = '/c/srv/projects/'
+      self.create_install_path = '/c/srv/projects/'
+      self.git_url = 'git@github.com:'
+      self.git_binary  = self.sh("which git")
+      self.git_login = self.sh("ssh git@github.com")
+    else: 
+      print 'OS not supported yet'
+      print target_os
+      exit(1)
+
+    # load repos definition
+    self.repos = self.loadRepos('repos.yaml')
+
+
+    # set debug/progress mode
+    debug = False
+
+    # check if github is configured
+    if self.git_binary.find("git") == -1:
+      print "Please install git before you proceed any further."
+      exit(1)
+
+    #if git_login.find("Permission denied (publickey).") != -1: 
+    #  print "Please configure github ssh access prior running this tool."
+    #  exit(1)
+
+    # create install path if it doesn't already exist
+    if not os.path.isdir(self.install_path):
+      self.sh("mkdir -p " + self.install_path)
+
+  def argument_parser(self):
+
+    # arguments definitions 
+    groups_args = dict(metavar='RepoGroup', action='append', type=str, nargs='*', help='a group of git repos to work on')
+
+    parser = ArgumentParser(description='DevMan')
+
+    subparsers = parser.add_subparsers(title='cmd', description="Command to perform on all repositories.", dest='cmd')
+
+    # devman clone
+    sp_clone = subparsers.add_parser('clone', description='git clone selected repositories')
+    sp_clone.add_argument('groups', **groups_args)
+
+    # devman list 
+    sp_list = subparsers.add_parser('list', description='List configured repositories')
+    sp_list.add_argument('groups', **groups_args)
     
-    # make sure a repository has been created.
-    try: 
+    # devman fetch
+    sp_fetch = subparsers.add_parser('fetch')
+    sp_fetch.add_argument('-p', '--prune', help="Pass the --prune option when doing git fetch", action="store_true", dest="prune")
+    sp_fetch.add_argument('groups', **groups_args)
+
+    # devman ff
+    sp_ff= subparsers.add_parser('ff', description='git pull --ff-only selected repositories' )
+    sp_ff.add_argument('groups', **groups_args)
+    
+    return parser.parse_args()
+
+  ##
+  # Load default configurations from devman.conf ini file
+  ##
+  def loadConfig(self):
+    parser = SafeConfigParser()
+    parser.read('%s/devman.conf' % install_dir)
+    for section_name in parser.sections():
+      print 'Section:', section_name
+      print '  Options:', parser.options(section_name)
+      for name, value in parser.items(section_name):
+        print '  %s = %s' % (name, value)
+
+  ##
+  # return repos from group
+  ## 
+  def getRepos(self):
+    all_repos = {}
+    for g in self.groups:
+      all_repos[g] = self.repos[g]
+    return all_repos
+
+
+  def iterRepos(self, check=True):
+    for group, repo_definition in self.getRepos().items():
+      for repo_name, repo_url in repo_definition.items():
+        repo_path = self.install_path + repo_name
+        if check:
+          if self.is_managable_repo(repo_name):
+            repo = Repo(repo_path)
+            yield repo_name, repo_path, repo_url, repo
+          else: 
+            pass
+        else:
+          yield repo_name, repo_path, repo_url
+
+
+  def is_managable_repo(self, repo_name):
+    try:
+      repo_path = self.install_path + repo_name
       repo = Repo(repo_path)
-    except :
-      print "Repository " + repo_name + " has not yet been created. Doing so now."
-      try:
-        this_repo = Repo.clone_from(remote_url, repo_path , progress = DisProgress())
-        for submodule in this_repo.submodules:
-          print "Now Initializing submodule:" + str(submodule)
-          submodule.update(progress = DisProgress())
-      except GitCommandError as e:
-        print "Error cloning repository: " + str(e)
+      if repo.bare == True:
+        print "Error: Cannot process bare repo: " + repo_name
+        return False
+      elif repo.is_dirty() :
+        print "Error: Cannot process dirty repo: " + repo_name
+        return False
+      else:
+        return True
+    except InvalidGitRepositoryError:
+      print 'Error: Repository %s is not a git repo. Remove folder and try again.' % repo_name
+    except NoSuchPathError:
+      print 'Error: Repository %s does not exist. Please use git clone first.' % repo_name
+      return False
 
+  ##
+  # Load git repos definition from yaml files
+  # Add configuration layer from default config
+  ##
+  def loadRepos(self, repo_file):
+    # load yaml file
+    repo_conf = '{0}/{1}'.format(install_dir, repo_file) 
+    stream = open(repo_conf, 'r')
+    repo_list = yaml.safe_load(stream)
+
+    # load only configured groups from config file
+    repos = {}
+    for group in self.groups:
+      if group in repo_list:
+        updated_repos = {}
+        for repo_name, repo_url in repo_list[group].items():
+          remote_url = self.git_url + repo_url
+          updated_repos[repo_name] = remote_url
+        repos[group] = updated_repos
+      else:
+        print 'Error: could not find group {0} in {1}.'.format(group, 'repo.yaml')
+        exit(1)
+    return repos
+
+	##  
+  # repo actions
+  ##
+  def ff(self):
+    # Make sure repository has been created
+    #self.clone()
     
-    repo = Repo(repo_path)
-      
-    if repo.bare == True:
-      print "Cannot process bare repo: " + repo_name
-    elif repo.is_dirty() :
-      print "Cannot process dirty repo: " + repo_name
-    else:
-      print "Pulling " + repo_url + " from origin"
+    for name, path, url, repo in self.iterRepos():
+      print "Fast-forward {0} from origin".format(name)
+      cur_branch = repo.head.reference.name
       o = repo.remotes.origin
-      o.pull()
+      o.pull(cur_branch, ff_only=True, progress = DisProgress())
+
+  def fetch(self, prune):
+    # Make sure repository has been created
+    self.clone()
+
+    for repo_name, repo_url in self.getRepos().items():
+      repo_path = self.install_path + repo_name
+      remote_url = self.git_url + repo_url
+
+      if not self.is_repo(repo_path):
+        print 'fetching on a non repo, updating'
+      
+      if self.is_managable_repo(repo_path):
+        repo = Repo(repo_path)
+      
+      print "Fetch: " + repo_name
+      try:
+        repo.remotes.origin.fetch(prune=prune, progress = DisProgress())
+      except AssertionError as e:
+        if prune:
+          print "Catch assertion error probably due to pruned branch"
+        else:
+          raise e
+
+
+  def is_repo(self, repo_path):
+    try:
+      Repo(repo_path)
+      return True
+    except NoSuchPathError:
+      return False
+
+  # TODO: finish_me
+  def git_clone(self, path, url):
+    try:
+      print "Cloning " + url
+      this_repo = Repo.clone_from(url, path , progress = DisProgress())
+      for submodule in this_repo.submodules:
+        print "Now Initializing submodule:" + str(submodule)
+        submodule.update(progress = DisProgress())
+    except GitCommandError as e:
+      print "Error cloning repository: " + str(e)
+
+  def clone(self):
+    for name, path, url in self.iterRepos(check=False):
+      if self.is_repo(path):
+        print 'Not cloning over an existing repo: ' + name
+      if not self.is_repo(path):
+        print "Cloning " + name
+        try:
+          this_repo = Repo.clone_from(url, path , progress = DisProgress())
+          for submodule in this_repo.submodules:
+            print "Now Initializing submodule:" + str(submodule)
+            submodule.update(progress = DisProgress())
+        except GitCommandError as e:
+          print "Error cloning repository: " + str(e)
+
+    exit(0)
+    #print self.getRepos()
+    for group, repo_definition in self.getRepos().items():
+      group_repo = []
+    
+    for repo_name, repo_url in repo_definition.items():
+      #print repo_name
+      #print repo_url
+      repo_path = self.install_path + repo_name
+      #print repo_path
+      
+      if not self.is_repo(repo_path):
+        try:
+          print "Cloning " + repo_name
+          this_repo = Repo.clone_from(repo_url, repo_path , progress = DisProgress())
+          for submodule in this_repo.submodules:
+            print "Now Initializing submodule:" + str(submodule)
+            submodule.update(progress = DisProgress())
+        except GitCommandError as e:
+          print "Error cloning repository: " + str(e)
+      
+  def list(self):
+    for repo_name, repo_url in self.getRepos().items():
+	    print repo_name
+
+  # TODO: 
+  def run(self):
+    options = { 
+      'clone' : self.clone(),
+      'ff' : self.ff(),
+      'fetch': self.fetch(self.args.prune),
+      'list' : self.list(),
+    }
+
+    options[command]()
+
+  # Utils
+  def sh(self, cmd):
+    try: 
+      output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+    except Exception, e:
+      output = str(e.output)
+    return output
+
+
+def main():
+
+  devman = DevMan()
+  devman.run()
+
+if __name__ == "__main__":
+  main()
