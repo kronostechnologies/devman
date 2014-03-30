@@ -48,7 +48,6 @@ class DevMan:
 
   def __init__(self):
     self.config = self.loadConfig()
-
     # extract useful information from arguments
     self.args = self.argument_parser()
     self.command = self.args.cmd
@@ -63,32 +62,31 @@ class DevMan:
     
     # TODO: use config
     if target_os == 'Linux':
-      self.install_path = '/srv/projects/'
-      self.git_url = 'git@github.com:'
+      self.repo_clone_path = self.config['default']['repo_clone_path']
+      self.git_url = self.config['default']['git_baseurl']
       self.git_binary  = self.sh("which git")
       self.git_login = self.sh("ssh git@github.com")
     elif target_os == 'Windows':
-      self.install_path = 'c:/srv/projects/'
-      self.git_url = 'https://github.com/'
+      self.repo_clone_path = self.config['windows']['repo_clone_path']
+      self.git_url = self.config['windows']['git_baseurl']
       self.git_binary  = self.sh("c:/vagrant/embedded/mingw/bin/which.exe git")
       self.git_login = self.sh("ssh git@github.com")
     elif target_os == 'Darwin':
-      self.install_path = '/srv/projects/'
-      self.git_url = 'git@github.com:'
+      self.repo_clone_path = self.config['default']['install_path']
+      self.git_url = self.config['default']['git_baseurl']
       self.git_binary  = self.sh("which git")
       self.git_login = self.sh("ssh git@github.com")
     elif target_os == 'CYGWIN_NT-6.1':
-      self.install_path = '/c/srv/projects/'
-      self.create_install_path = '/c/srv/projects/'
-      self.git_url = 'git@github.com:'
+      self.repo_clone_path = self.config['cygwin']['repo_clone_path']
+      self.git_url = self.config['default']['git_baseurl']
       self.git_binary  = self.sh("which git")
       self.git_login = self.sh("ssh git@github.com")
     else: 
       print 'OS not supported yet'
       print target_os
       exit(1)
-
-    self.repo_conf = install_dir + '/' + 'repos.yaml'
+    
+    self.repo_conf_file = self.config['default']['repo_conf_file']
     # load repos definition
     self.repos = self.loadRepos()
     
@@ -100,8 +98,8 @@ class DevMan:
       print "Please install git before you proceed any further."
       exit(1)
     # create install path if it doesn't already exist
-    if not os.path.isdir(self.install_path):
-      self.sh("mkdir -p " + self.install_path)
+    if not os.path.isdir(self.repo_clone_path):
+      self.sh("mkdir -p " + self.repo_clone_path)
   
   def argument_parser(self):
     # arguments definitions 
@@ -142,12 +140,13 @@ class DevMan:
   def loadConfig(self):
     parser = SafeConfigParser()
     parser.read('%s/devman.conf' % install_dir)
+    config = {}
     for section_name in parser.sections():
-      #print 'Section:', section_name
-      #print '  Options:', parser.options(section_name)
+      section_confs = {}
       for name, value in parser.items(section_name):
-        pass
-      #  print '  %s = %s' % (name, value)
+        section_confs[name] = value
+      config[section_name] = section_confs
+    return config
   ##
   # return repos from group
   ## 
@@ -160,7 +159,7 @@ class DevMan:
   def iterRepos(self, create=False):
     for group, repo_definition in self.getRepos().items():
       for repo_name, repo_url in repo_definition.items():
-        repo_path = self.install_path + repo_name
+        repo_path = self.repo_clone_path + repo_name
         try:
           repo = Repo(repo_path)
           if repo.bare == True:
@@ -191,7 +190,8 @@ class DevMan:
   ##
   def loadRepos(self):
     # load yaml file
-    stream = open(self.repo_conf, 'r')
+    repo_conf = install_dir + '/' + self.repo_conf_file
+    stream = open(repo_conf, 'r')
     self.repo_list = yaml.safe_load(stream)
 
     # load only configured groups from config file
