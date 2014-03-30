@@ -49,17 +49,25 @@ Manage your git repositories with your Workflow in mind.
   * When you specify no arguments, all groups are processed. 
 
 
-
 ## USAGE
 ### Linux / Mac
 
     devman -h
+
+    # list configured repos
+    devman list [<group>]
+
+    # git clone <group>
+    devman clone [<group>]
     
-    # git pull --rebase for all your repos (TODO)
-    devman [ff] [<group>]
+    # git pull --ff-only 
+    devman ff [<group>]
+
+    # git fetch [--prune] 
+    devman fetch [--prune] [<group>]
     
-    # checkout all branches to specific branch name (TODO)
-    devman [co] <branch_name> [<group>] 
+    # checkout all branches to specific branch name
+    devman co -b <branch_name> [<group>] 
     
     # tag all repos in one group (not implemented yet)
     devman [t] <tag_name> [<group>] 

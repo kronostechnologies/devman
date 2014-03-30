@@ -112,11 +112,16 @@ class DevMan:
     subparsers = parser.add_subparsers(title='cmd', description="Command to perform on all repositories.", dest='cmd')
     
     # devman clone
-    sp_clone = subparsers.add_parser('clone', description='git clone selected repositories')
+    sp_clone = subparsers.add_parser('clone', description='git clone on selected repo-groups')
     sp_clone.add_argument('groups', **groups_args)
+
+    # devman co
+    sp_co= subparsers.add_parser('co', description='git checkout -b branch origin/branch on selected repo-groups' )
+    sp_co.add_argument('-b', '--branch', help="Pass the --branch option when checking out branches", action="store", dest="branch")
+    sp_co.add_argument('groups', **groups_args)
     
     # devman list 
-    sp_list = subparsers.add_parser('list', description='List configured repositories')
+    sp_list = subparsers.add_parser('list', description='List configured repo-groups')
     sp_list.add_argument('groups', **groups_args)
     
     # devman fetch
@@ -125,8 +130,9 @@ class DevMan:
     sp_fetch.add_argument('groups', **groups_args)
     
     # devman ff
-    sp_ff= subparsers.add_parser('ff', description='git pull --ff-only selected repositories' )
+    sp_ff= subparsers.add_parser('ff', description='git pull --ff-only on selected repo-groups' )
     sp_ff.add_argument('groups', **groups_args)
+
     
     return parser.parse_args()
   
@@ -217,6 +223,26 @@ class DevMan:
     for name, path, url, repo in self.iterRepos(create=True):
       pass
 
+  # checkout branch
+  def co(self, branch):
+    for name, path, url, repo in self.iterRepos():
+      remote_branches = [remote.strip() for remote in repo.git.branch(r=True).splitlines()]
+      local_branches = repo.branches
+      current_branch = str(repo.active_branch)
+      remote_branch = "origin/"+branch 
+      
+      # this remote branch exists 
+      if remote_branch in remote_branches:
+        # we are not already on this branch
+        if branch != current_branch:
+          print "Checking out {0} on {1}".format(branch, name)
+          if branch in local_branches:
+            repo.git.checkout(branch)
+          else:
+            repo.git.checkout(remote_branch, b=branch)
+        else:
+          pass
+
   def ff(self):
     for name, path, url, repo in self.iterRepos():
       print "Fast-forward from origin: {0}".format(name)
@@ -238,8 +264,6 @@ class DevMan:
         else:
           raise e
 
-  
-
   def list(self):
     print '------------------------------------------------'
     print '| Available                                    |'
@@ -259,6 +283,8 @@ class DevMan:
       self.fetch(self.args.prune)
     elif self.command == 'ff':
       self.ff()
+    elif self.command == 'co':
+      self.co(self.args.branch)
     else:
       print 'Error command not found.'
       exit(1)
