@@ -7,7 +7,7 @@ devman
 
 If you don't want to wait, use git-repo instead. 
 
--------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 
 Manage your git repositories with your Workflow in mind.
 
@@ -45,49 +45,64 @@ Manage your git repositories with your Workflow in mind.
 
   * Configure repo groups in yaml files group-name.yaml in "repos" folder
     * Each group contains a set of repos that are managed as a whole.
-    * You then refer to a group of repositories when you want to do an operation.
-  * When you specify no arguments, all groups are processed. 
+    * You then refer to a group of repositories when you want to do any operation.
+  * When you specify no arguments, default group is processed. 
+  * devman.conf (TODO)
 
 
 ## USAGE
 ### Linux / Mac
 
-    devman -h
+```
+devman -h
 
-    # list configured repos
-    devman list [<group>]
+# list configured repos
+devman list [<group>]
 
-    # git clone <group>
-    devman clone [<group>]
-    
-    # git pull --ff-only 
-    devman ff [<group>]
+# git clone <group>
+devman clone [<group>]
 
-    # git fetch [--prune] 
-    devman fetch [--prune] [<group>]
-    
-    # checkout all branches to specific branch name
-    devman co -b <branch_name> [<group>] 
-    
-    # tag all repos in one group (not implemented yet)
-    devman [t] <tag_name> [<group>] 
-    
-    # push all repos to origin (not implemented yet -- no upstream by default?)
-    devman [p] [<group>] 
+# git pull --ff-only 
+devman ff [<group>]
+
+#git fetch [--prune] 
+devman fetch [--prune] [<group>]
+
+# checkout all branches to specific branch name
+devman co -b <branch_name> [<group>] 
+
+# tag all repos in one group (not implemented yet)
+devman [t] <tag_name> [<group>] 
+
+# push all repos to origin (not implemented yet -- no upstream by default?)
+devman [p] [<group>] 
+```
 
 ### Windows (Cygwin)
   
-    C:/Python27/python.exe ./devman -h
+```
+C:/Python27/python.exe ./devman -h
+```
 
 ## INSTALL
 ### Linux
     
-    aptitude install git python-pip
-    pip install gitpython
+```
+aptitude install git python-pip
+pip install gitpython
+cp repos.sample.yaml repos.yaml
+sudo ln -s /srv/projects/devman/devman /usr/local/bin
+```  
 
 ### Mac
 
-    *Please contribute.*
+```
+sudo easy_install pip
+pip install gitpython --pre
+cp repos.sample.yaml repos.yaml
+sudo ln -s /srv/projects/devman/devman /usr/local/bin
+
+```  
 
 ### Windows (on cygwin)
 
