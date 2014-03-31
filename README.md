@@ -83,7 +83,7 @@ C:/Python27/python.exe ./devman -h
     
 ```
 aptitude install git python-pip
-pip install gitpython
+pip install --pre gitpython pyyaml
 cp repos.sample.yaml repos.yaml
 sudo ln -s /srv/projects/devman/devman /usr/local/bin
 ```  
@@ -92,7 +92,7 @@ sudo ln -s /srv/projects/devman/devman /usr/local/bin
 
 ```
 sudo easy_install pip
-pip install gitpython --pre
+pip install --pre gitpython pyyaml
 cp repos.sample.yaml repos.yaml
 sudo ln -s /srv/projects/devman/devman /usr/local/bin
 
