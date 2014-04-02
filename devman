@@ -72,7 +72,7 @@ class DevMan:
       self.git_binary  = self.sh("c:/vagrant/embedded/mingw/bin/which.exe git")
       self.git_login = self.sh("ssh git@github.com")
     elif target_os == 'Darwin':
-      self.repo_clone_path = self.config['default']['install_path']
+      self.repo_clone_path = self.config['default']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
       self.git_binary  = self.sh("which git")
       self.git_login = self.sh("ssh git@github.com")
