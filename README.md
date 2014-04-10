@@ -83,7 +83,7 @@ C:/Python27/python.exe ./devman -h
     
 ```
 aptitude install git python-pip
-pip install --pre gitpython pyyaml
+pip install gitpython pyyaml
 cp repos.sample.yaml repos.yaml
 sudo ln -s /srv/projects/devman/devman /usr/local/bin
 ```  
@@ -120,7 +120,7 @@ Manually install dependencies in git-bash  / Cygwin
 
     curl -o ez_setup.py https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
 
-    C:/Python27/python.exe ez_setup.py
+    python ez_setup.py
 
     curl -o git-python.tar.gz https://pypi.python.org/packages/source/G/GitPython/GitPython-0.3.2.RC1.tar.gz
 
@@ -128,7 +128,15 @@ Manually install dependencies in git-bash  / Cygwin
 
     cd GitPython-0.3.2.RC1/
 
-    C:/Python27/python.exe ./setup.py install
+    python ./setup.py install
 
-> We simply install git, python, SetupTools and GitPython. Beware that you might have to tweak this tool a little bit.
+    curl  http://pyyaml.org/download/pyyaml/PyYAML-3.11.tar.gz
+
+    tar.exe xfpv PyYAML-3.11.tar.gz
+
+    cd PyYAML-3.11.tar.gz
+
+    python ./setup.py install
+
+> We simply install git, python, SetupTools, GitPython and PyYaml. Beware that you might have to tweak this tool a little bit.
 
