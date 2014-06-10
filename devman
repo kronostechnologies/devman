@@ -204,7 +204,7 @@ class DevMan:
           updated_repos[repo_name] = remote_url
         repos[group] = updated_repos
       else:
-        raise Exception("Error: could not find group {0} in {1}.".format(group, 'repos.yaml'))
+        raise Exception("Error: could not find group {0} in {1}.".format(group, repo_conf))
     return repos
 
   def git_clone(self, path, url):
