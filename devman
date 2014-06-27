@@ -3,6 +3,7 @@
 
 # TODO:
 # - Create setup.py
+# - setup multithreading
 import subprocess
 import popen2
 from git import Repo
@@ -38,8 +39,8 @@ class DisProgress(RemoteProgress):
       print('{0} {1}/{2} {3}'.format(op_code, cur_count, max_count, message))
 
 def flatten(lst):
-  return sum( ([x] if not isinstance(x, list) else flatten(x)
-         for x in lst), [] )
+  return sum(([x] if not isinstance(x, list) else flatten(x)
+         for x in lst), [])
 
 class DevMan:
 
@@ -51,7 +52,7 @@ class DevMan:
     
     # TODO: set default group from config
     if self.groups == []:
-      print 'Using default group as no argument has been given'
+      # print 'Using default group as no argument has been given'
       self.groups.append('dev')
     
     target_os = platform.system()
@@ -60,22 +61,22 @@ class DevMan:
     if target_os == 'Linux':
       self.repo_clone_path = self.config['default']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
-      self.git_binary  = self.sh("which git")
+      self.git_binary = self.sh("which git")
       self.git_login = self.sh("ssh git@github.com")
     elif target_os == 'Windows':
       self.repo_clone_path = self.config['windows']['repo_clone_path']
       self.git_url = self.config['windows']['git_baseurl']
-      self.git_binary  = self.sh("c:/vagrant/embedded/mingw/bin/which.exe git")
+      self.git_binary = self.sh("c:/vagrant/embedded/mingw/bin/which.exe git")
       self.git_login = self.sh("ssh git@github.com")
     elif target_os == 'Darwin':
       self.repo_clone_path = self.config['default']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
-      self.git_binary  = self.sh("which git")
+      self.git_binary = self.sh("which git")
       self.git_login = self.sh("ssh git@github.com")
     elif target_os == 'CYGWIN_NT-6.1':
       self.repo_clone_path = self.config['cygwin']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
-      self.git_binary  = self.sh("which git")
+      self.git_binary = self.sh("which git")
       self.git_login = self.sh("ssh git@github.com")
     else: 
       print 'OS not supported yet'
@@ -110,7 +111,7 @@ class DevMan:
     sp_clone.add_argument('groups', **groups_args)
 
     # devman co
-    sp_co = subparsers.add_parser('co', description='git checkout -b branch origin/branch on selected repo-groups' )
+    sp_co = subparsers.add_parser('co', description='git checkout -b branch origin/branch on selected repo-groups')
     sp_co.add_argument('-b', '--branch', help="Pass the --branch option when checking out branches", action="store", dest="branch")
     sp_co.add_argument('groups', **groups_args)
     
@@ -124,15 +125,18 @@ class DevMan:
     sp_fetch.add_argument('groups', **groups_args)
     
     # devman ff
-    sp_ff = subparsers.add_parser('ff', description='git pull --ff-only on selected repo-groups' )
+    sp_ff = subparsers.add_parser('ff', description='git pull --ff-only on selected repo-groups')
     sp_ff.add_argument('groups', **groups_args)
-
+    
+    # devman st
+    sp_st = subparsers.add_parser('st', description='git st')
+    sp_st.add_argument('groups', **groups_args)
     
     return parser.parse_args()
   
-  ##
+  # #
   # Load default configurations from devman.conf ini file
-  ##
+  # #
   def loadConfig(self):
     parser = SafeConfigParser()
     parser.read('%s/devman.conf' % install_dir)
@@ -143,16 +147,16 @@ class DevMan:
         section_confs[name] = value
       config[section_name] = section_confs
     return config
-  ##
+  # #
   # return repos from group
-  ## 
+  # # 
   def getRepos(self):
     all_repos = {}
     for g in self.groups:
       all_repos[g] = self.repos[g]
     return all_repos
 
-  def iterRepos(self, create=False):
+  def iterRepos(self, create=False, clean=True):
     for group, repo_definition in self.getRepos().items():
       for repo_name, repo_url in repo_definition.items():
         repo_path = self.repo_clone_path + repo_name
@@ -162,8 +166,11 @@ class DevMan:
             print "Cannot process bare repo: %s" % repo_name 
             pass
           elif repo.is_dirty() :
-            print "Cannot process dirty repo: %s" % repo_name
-            pass
+              if clean:
+                  print "Cannot process dirty repo: %s" % repo_name
+                  pass
+              else:
+                  yield repo_name, repo_path, repo_url, repo
           else:
             yield repo_name, repo_path, repo_url, repo
         except InvalidGitRepositoryError:
@@ -172,18 +179,18 @@ class DevMan:
         except NoSuchPathError:
           if create:
             print "Cloning " + repo_name
-            this_repo = Repo.clone_from(repo_url, repo_path , progress = DisProgress())
+            this_repo = Repo.clone_from(repo_url, repo_path , progress=DisProgress())
             for submodule in this_repo.submodules:
               print "Now Initializing submodule:" + str(submodule)
-              submodule.update(progress = DisProgress())
+              submodule.update(progress=DisProgress())
           else:
             print 'Error: Repository %s does not exist. Please use git clone first.' % repo_name
             exit(1)
 
-  ##
+  # #
   # Load git repos definition from yaml files
   # Add configuration layer from default config
-  ##
+  # #
   def loadRepos(self):
     # load yaml file
     repo_conf = install_dir + '/' + self.repo_conf_file
@@ -206,15 +213,15 @@ class DevMan:
   def git_clone(self, path, url):
     try:
       print "Cloning: " + name
-      this_repo = Repo.clone_from(url, path , progress = DisProgress())
+      this_repo = Repo.clone_from(url, path , progress=DisProgress())
       for submodule in this_repo.submodules:
         print "Initializing submodule:" + str(submodule)
-        submodule.update(progress = DisProgress())
+        submodule.update(progress=DisProgress())
     except GitCommandError:
       raise Exception("Error: Could not clone repo. %s" % str(e))
-  ##
+  # #
   # repo actions
-  ##
+  # #
   def clone(self):
     for name, path, url, repo in self.iterRepos(create=True):
       pass
@@ -225,7 +232,7 @@ class DevMan:
       remote_branches = [remote.strip() for remote in repo.git.branch(r=True).splitlines()]
       local_branches = repo.branches
       current_branch = str(repo.active_branch)
-      remote_branch = "origin/"+branch 
+      remote_branch = "origin/" + branch 
       
       # this remote branch exists 
       if remote_branch in remote_branches:
@@ -239,12 +246,22 @@ class DevMan:
         else:
           pass
 
+  # TODO: diff
+  # TODO: unstaged
+    
+  def st(self):
+    for name, path, url, repo in self.iterRepos(clean=False):
+      print "{0} [{1}]".format(name, repo.head.reference.name)
+      if repo.untracked_files:
+          for filename in repo.untracked_files:
+              print "  + " + filename
+
   def ff(self):
     for name, path, url, repo in self.iterRepos():
-      print "Fast-forward from origin: {0}".format(name)
-      cur_branch = repo.head.reference.name
-      o = repo.remotes.origin
-      o.pull(cur_branch, ff_only=True, progress = DisProgress())
+        print "Fast-forward from origin: {0}".format(name)
+        cur_branch = repo.head.reference.name
+        o = repo.remotes.origin
+        o.pull(cur_branch, ff_only=True, progress=DisProgress())
 
   def fetch(self, prune):
     for name, path, url, repo in self.iterRepos():
@@ -253,7 +270,7 @@ class DevMan:
           print "Fetch prune: {0}".format(name)
         else:
           print "Fetch: {0} ".format(name)
-        repo.remotes.origin.fetch(prune=prune, progress = DisProgress())
+        repo.remotes.origin.fetch(prune=prune, progress=DisProgress())
       except AssertionError as e:
         if prune:
           print "Catch assertion error probably due to pruned branch"
@@ -281,6 +298,8 @@ class DevMan:
       self.ff()
     elif self.command == 'co':
       self.co(self.args.branch)
+    elif self.command == 'st':
+      self.st()
     else:
       print 'Error command not found.'
       exit(1)
