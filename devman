@@ -1,12 +1,8 @@
 #!/usr/bin/python -tt
 # vim: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-## TODO: handle cases for multiple usages
+# TODO:
 # - Create setup.py
-# - manage standard repositories (used all the time)
-# - manage libraries (owned by kronostechnologies-build@github)
-# - manage mass update
-# - manage mass branch switch
 import subprocess
 import popen2
 from git import Repo
@@ -31,6 +27,7 @@ import pprint as pp
 ######
 debug = False
 install_dir = os.path.dirname(os.path.realpath(__file__))
+os.environ['GIT_SSH'] = os.path.join(install_dir, 'ssh_wrapper')
 ######
 
 class DisProgress(RemoteProgress):
@@ -48,7 +45,6 @@ class DevMan:
 
   def __init__(self):
     self.config = self.loadConfig()
-    # extract useful information from arguments
     self.args = self.argument_parser()
     self.command = self.args.cmd
     self.groups = flatten(self.args.groups)
@@ -114,7 +110,7 @@ class DevMan:
     sp_clone.add_argument('groups', **groups_args)
 
     # devman co
-    sp_co= subparsers.add_parser('co', description='git checkout -b branch origin/branch on selected repo-groups' )
+    sp_co = subparsers.add_parser('co', description='git checkout -b branch origin/branch on selected repo-groups' )
     sp_co.add_argument('-b', '--branch', help="Pass the --branch option when checking out branches", action="store", dest="branch")
     sp_co.add_argument('groups', **groups_args)
     
@@ -128,7 +124,7 @@ class DevMan:
     sp_fetch.add_argument('groups', **groups_args)
     
     # devman ff
-    sp_ff= subparsers.add_parser('ff', description='git pull --ff-only on selected repo-groups' )
+    sp_ff = subparsers.add_parser('ff', description='git pull --ff-only on selected repo-groups' )
     sp_ff.add_argument('groups', **groups_args)
 
     
