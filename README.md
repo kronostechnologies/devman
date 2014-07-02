@@ -82,19 +82,21 @@ C:/Python27/python.exe ./devman -h
 ### Linux
     
 ```
+git clone https://github.com/kronostechnologies/devman.git /opt/devman/
 aptitude install git python-pip
 pip install gitpython pyyaml
 cp repos.sample.yaml repos.yaml
-sudo ln -s /srv/projects/devman/devman /usr/local/bin
-```  
+sudo ln -s /opt/devman/devman /usr/local/bin
+```
 
 ### Mac
 
 ```
+git clone https://github.com/kronostechnologies/devman.git /opt/devman/
 sudo easy_install pip
 pip install --pre gitpython pyyaml
 cp repos.sample.yaml repos.yaml
-sudo ln -s /srv/projects/devman/devman /usr/local/bin
+sudo ln -s /opt/devman/devman /usr/local/bin
 
 ```  
 
