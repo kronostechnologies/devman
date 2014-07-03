@@ -1,14 +1,25 @@
 #!/usr/bin/python -tt
+#
 # vim: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
-
 # TODO:
 # - Create setup.py
 # - setup multithreading
 
-import subprocess
-import popen2
+# to figure out in which folder we are running
+import os
+import sys
+import platform
+
+# defaults
+install_dir = os.path.dirname(os.path.realpath(__file__))
+config_file = 'devman.conf'
+override_file = 'devman.local.conf'
+os.environ['GIT_SSH'] = os.path.join(install_dir, 'ssh_wrapper')
+######
+# load module from local modules path
+sys.path.append(os.path.join(install_dir, 'modules'))
+
 from git import Repo
-from git.util import RemoteProgress
 from git import GitCommandError
 from git import NoSuchPathError
 from git import InvalidGitRepositoryError
@@ -19,28 +30,10 @@ from argparse import SUPPRESS
 from ConfigParser import SafeConfigParser
 import yaml
 
-# to check operating system now running.
-import platform
-import sys
-
-# to figure out in which folder we are running
-import os
 import pprint as pp
 
-######
-debug = False
-install_dir = os.path.dirname(os.path.realpath(__file__))
-os.environ['GIT_SSH'] = os.path.join(install_dir, 'ssh_wrapper')
-######
-
-# Utils
-class DisProgress(RemoteProgress):
-  if debug:
-    def line_dropped(self, line):
-      print('{0}'.format(line))
-    def update(self, op_code, cur_count, max_count=None, message=''):
-      print('{0} {1}/{2} {3}'.format(op_code, cur_count, max_count, message))
-
+# Utils (sh, flatten, DisProgress)
+import subprocess
 def flatten(lst):
   return sum(([x] if not isinstance(x, list) else flatten(x)
          for x in lst), [])
@@ -52,11 +45,23 @@ def sh(cmd):
     output = str(e.output)
   return output
 
+
+debug = False
+
+from git.util import RemoteProgress
+class DisProgress(RemoteProgress):
+  if debug:
+    def line_dropped(self, line):
+      print('{0}'.format(line))
+    def update(self, op_code, cur_count, max_count=None, message=''):
+      print('{0} {1}/{2} {3}'.format(op_code, cur_count, max_count, message))
+
 ### 
 class DevMan:
 
   def __init__(self):
-    self.config = self.loadConfig()
+    self.config = Conf().getOverridenConfig()
+    pp.pprint(self.config)
     self.args = self.argument_parser()
     self.command = self.args.cmd
     self.groups = flatten(self.args.groups)
@@ -68,22 +73,23 @@ class DevMan:
     
     # TODO: use config
     if target_os == 'Linux':
-      self.repo_clone_path = self.config['default']['repo_clone_path']
+      self.repo_clone_path = os.path.expanduser(self.config['default']['repo_clone_path'])
       self.git_url = self.config['default']['git_baseurl']
       self.git_binary = sh("which git")
       self.git_login = sh("ssh git@github.com")
     elif target_os == 'Windows':
-      self.repo_clone_path = self.config['windows']['repo_clone_path']
+      self.repo_clone_path = os.path.expanduser(self.config['windows']['repo_clone_path'])
       self.git_url = self.config['windows']['git_baseurl']
       self.git_binary = sh("c:/vagrant/embedded/mingw/bin/which.exe git")
       self.git_login = sh("ssh git@github.com")
     elif target_os == 'Darwin':
+      self.repo_clone_path = os.path.expanduser(self.config['default']['repo_clone_path'])
       self.repo_clone_path = self.config['default']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
       self.git_binary = sh("which git")
       self.git_login = sh("ssh git@github.com")
     elif target_os == 'CYGWIN_NT-6.1':
-      self.repo_clone_path = self.config['cygwin']['repo_clone_path']
+      self.repo_clone_path = os.path.expanduser(self.config['cygwin']['repo_clone_path'])
       self.git_url = self.config['default']['git_baseurl']
       self.git_binary = sh("which git")
       self.git_login = sh("ssh git@github.com")
@@ -96,9 +102,6 @@ class DevMan:
     # load repos definition
     self.repos = self.loadRepos()
     
-    # set debug/progress mode
-    debug = False
-
     # check if github is configured
     if self.git_binary.find("git") == -1:
       print "Please install git before you proceed any further."
@@ -110,7 +113,6 @@ class DevMan:
   def argument_parser(self):
     # arguments definitions 
     groups_args = dict(metavar='RepoGroup', action='append', type=str, nargs='*', help='a group of git repos to work on')
-    
     parser = ArgumentParser(description='DevMan')
     
     subparsers = parser.add_subparsers(title='cmd', description="Command to perform on all repositories.", dest='cmd')
@@ -143,19 +145,6 @@ class DevMan:
     
     return parser.parse_args()
   
-  # #
-  # Load default configurations from devman.conf ini file
-  # #
-  def loadConfig(self):
-    parser = SafeConfigParser()
-    parser.read('%s/devman.conf' % install_dir)
-    config = {}
-    for section_name in parser.sections():
-      section_confs = {}
-      for name, value in parser.items(section_name):
-        section_confs[name] = value
-      config[section_name] = section_confs
-    return config
   # #
   # return repos from group
   # # 
@@ -231,6 +220,7 @@ class DevMan:
         submodule.update(progress=DisProgress())
     except GitCommandError:
       raise Exception("Error: Could not clone repo. %s" % str(e))
+
   # #
   # repo actions
   # #
@@ -315,6 +305,43 @@ class DevMan:
     else:
       print 'Error command not found.'
       exit(1)
+
+# Thx stackoverflow!
+def merge(a, b, path=None):
+    if path is None: path = []
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge(a[key], b[key], path + [str(key)])
+            elif a[key] == b[key]:
+                pass 
+            else:
+                a[key] = b[key]
+        else:
+            a[key] = b[key]
+    return a
+
+class Conf:
+  # #
+  # Load default configurations from devman.conf ini file
+  # # 
+  def __init__(self, config_path=os.path.join(install_dir, config_file), override_path=os.path.join(install_dir, override_file)):
+    self.config = self.loadConfFile(config_path)
+    self.override = self.loadConfFile(override_path)
+
+  def loadConfFile(self, filename):
+    parser = SafeConfigParser()
+    parser.read(filename)
+    conf = {}
+    for section_name in parser.sections():
+      section_confs = {}
+      for name, value in parser.items(section_name):
+        section_confs[name] = value
+      conf[section_name] = section_confs
+    return conf
+
+  def getOverridenConfig(self):
+    return merge(self.config, self.override)
 
 def main():
   devman = DevMan()

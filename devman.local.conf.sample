@@ -1,0 +1,3 @@
+[default]
+repo_group = www
+repo_clone_path = ~/kronos/

@@ -1,8 +1,5 @@
-<!-- vim: set ai ts=2 sw=2 et!: -->
-
 devman
 ======
-
 Manage your git repositories with your Workflow in mind.
 
  * Fork this repo
@@ -20,32 +17,22 @@ Manage your git repositories with your Workflow in mind.
 
  * You work on multiple projects that contain multiple repos and want to manage them from a unique tool. 
 
- * You are somewhat bored of cd'ing into your repos and want to control a specific repo, or group from any shell. 
+ * You are somewhat bored of cd'ing into your repos and want to control a specific repo, or group from any shell.  
 
  * You are most tired of clicking on your GUI to update all your repos and want to get up to speed with CLI users. ;-)
 
 ## Prerequisites
 
-  - git is installed on your system (or msysgit)
+  - git is installed on your system (or msysgit on cygwin)
 
   - python is installed on your system.
 
-  - your github ssh access is configured for
+  - your github ssh access is configured for 
     * key-based access or
-    * https access (using a .netrc file) or 
+    * https access (using a .netrc file) or  
     * using git-credential-winstore plugin (Windows)
 
-## SETUP
-
-  * Configure repo groups in yaml files group-name.yaml in "repos" folder
-    * Each group contains a set of repos that are managed as a whole.
-    * You then refer to a group of repositories when you want to do any operation.
-  * When you specify no arguments, default group is processed. 
-  * devman.conf (TODO)
-
-
 ## USAGE
-### Linux / Mac
 
 ```
 devman -h
@@ -65,42 +52,33 @@ devman fetch [--prune] [<group>]
 # checkout all branches to specific branch name
 devman co -b <branch_name> [<group>] 
 
-# tag all repos in one group (not implemented yet)
-devman [t] <tag_name> [<group>] 
+# list all configured repo groups
+devman ls [<group>] 
 
-# push all repos to origin (not implemented yet -- no upstream by default?)
-devman [p] [<group>] 
-```
-
-### Windows (Cygwin)
-  
-```
-C:/Python27/python.exe ./devman -h
 ```
 
 ## INSTALL
 ### Linux
     
 ```
-git clone https://github.com/kronostechnologies/devman.git /opt/devman/
-aptitude install git python-pip
-pip install gitpython pyyaml
+./install-linux.sh
 cp repos.sample.yaml repos.yaml
-sudo ln -s /opt/devman/devman /usr/local/bin
+sudo ln -s `pwd`/devman ~/bin/
 ```
 
 ### Mac
 
 ```
-git clone https://github.com/kronostechnologies/devman.git /opt/devman/
-sudo easy_install pip
-pip install --pre gitpython pyyaml
+./install-mac.sh # TODO
 cp repos.sample.yaml repos.yaml
-sudo ln -s /opt/devman/devman /usr/local/bin
+sudo ln -s `pwd`/devman ~/bin/
 
 ```  
 
-### Windows (on cygwin)
+### Cygwin
+
+./install-windows.bat # TODO
+cp repos.sample.yaml repos.yaml
 
 Manually install msysgit
 
@@ -112,33 +90,6 @@ Install git-credential-winstore (to save your credentials with your session)
 
     http://gitcredentialstore.codeplex.com/releases/view/106064)
  
-Manually install Python 2.7.6 (or version if you'd like to test it
+Manually install Python 2.7.6 (or version if you'd like to test it with)
 
     http://www.python.org/ftp/python/2.7.6/python-2.7.6.amd64.msi) 
-
-Manually install dependencies in git-bash  / Cygwin
-
-    cd /tmp
-
-    curl -o ez_setup.py https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
-
-    python ez_setup.py
-
-    curl -o git-python.tar.gz https://pypi.python.org/packages/source/G/GitPython/GitPython-0.3.2.RC1.tar.gz
-
-    tar.exe xfpv git-python.tar.gz 
-
-    cd GitPython-0.3.2.RC1/
-
-    python ./setup.py install
-
-    curl  http://pyyaml.org/download/pyyaml/PyYAML-3.11.tar.gz
-
-    tar.exe xfpv PyYAML-3.11.tar.gz
-
-    cd PyYAML-3.11.tar.gz
-
-    python ./setup.py install
-
-> We simply install git, python, SetupTools, GitPython and PyYaml. Beware that you might have to tweak this tool a little bit.
-
