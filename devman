@@ -61,7 +61,6 @@ class DevMan:
 
   def __init__(self):
     self.config = Conf().getOverridenConfig()
-    pp.pprint(self.config)
     self.args = self.argument_parser()
     self.command = self.args.cmd
     self.groups = flatten(self.args.groups)

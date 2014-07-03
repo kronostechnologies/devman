@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-DOT=$(dirname $0)
+DOT="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
 
 sudo aptitude install git -y
 
