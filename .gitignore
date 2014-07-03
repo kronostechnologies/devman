@@ -3,3 +3,4 @@ repos.yaml
 devman.local.conf
 .project
 .pydevproject
+*.pyc
