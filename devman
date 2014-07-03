@@ -4,6 +4,7 @@
 # TODO:
 # - Create setup.py
 # - setup multithreading
+
 import subprocess
 import popen2
 from git import Repo
@@ -12,6 +13,7 @@ from git import GitCommandError
 from git import NoSuchPathError
 from git import InvalidGitRepositoryError
 
+# arguments
 from argparse import ArgumentParser
 from argparse import SUPPRESS
 from ConfigParser import SafeConfigParser
@@ -31,6 +33,7 @@ install_dir = os.path.dirname(os.path.realpath(__file__))
 os.environ['GIT_SSH'] = os.path.join(install_dir, 'ssh_wrapper')
 ######
 
+# Utils
 class DisProgress(RemoteProgress):
   if debug:
     def line_dropped(self, line):
@@ -42,6 +45,14 @@ def flatten(lst):
   return sum(([x] if not isinstance(x, list) else flatten(x)
          for x in lst), [])
 
+def sh(cmd):
+  try: 
+    output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+  except Exception, e:
+    output = str(e.output)
+  return output
+
+### 
 class DevMan:
 
   def __init__(self):
@@ -50,10 +61,8 @@ class DevMan:
     self.command = self.args.cmd
     self.groups = flatten(self.args.groups)
     
-    # TODO: set default group from config
     if self.groups == []:
-      # print 'Using default group as no argument has been given'
-      self.groups.append('dev')
+      self.groups.append(self.config['default']['repo_group'])
     
     target_os = platform.system()
     
@@ -61,23 +70,23 @@ class DevMan:
     if target_os == 'Linux':
       self.repo_clone_path = self.config['default']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
-      self.git_binary = self.sh("which git")
-      self.git_login = self.sh("ssh git@github.com")
+      self.git_binary = sh("which git")
+      self.git_login = sh("ssh git@github.com")
     elif target_os == 'Windows':
       self.repo_clone_path = self.config['windows']['repo_clone_path']
       self.git_url = self.config['windows']['git_baseurl']
-      self.git_binary = self.sh("c:/vagrant/embedded/mingw/bin/which.exe git")
-      self.git_login = self.sh("ssh git@github.com")
+      self.git_binary = sh("c:/vagrant/embedded/mingw/bin/which.exe git")
+      self.git_login = sh("ssh git@github.com")
     elif target_os == 'Darwin':
       self.repo_clone_path = self.config['default']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
-      self.git_binary = self.sh("which git")
-      self.git_login = self.sh("ssh git@github.com")
+      self.git_binary = sh("which git")
+      self.git_login = sh("ssh git@github.com")
     elif target_os == 'CYGWIN_NT-6.1':
       self.repo_clone_path = self.config['cygwin']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
-      self.git_binary = self.sh("which git")
-      self.git_login = self.sh("ssh git@github.com")
+      self.git_binary = sh("which git")
+      self.git_login = sh("ssh git@github.com")
     else: 
       print 'OS not supported yet'
       print target_os
@@ -96,7 +105,7 @@ class DevMan:
       exit(1)
     # create install path if it doesn't already exist
     if not os.path.isdir(self.repo_clone_path):
-      self.sh("mkdir -p " + self.repo_clone_path)
+      sh("mkdir -p " + self.repo_clone_path)
   
   def argument_parser(self):
     # arguments definitions 
@@ -115,9 +124,9 @@ class DevMan:
     sp_co.add_argument('-b', '--branch', help="Pass the --branch option when checking out branches", action="store", dest="branch")
     sp_co.add_argument('groups', **groups_args)
     
-    # devman list 
-    sp_list = subparsers.add_parser('list', description='List configured repo-groups')
-    sp_list.add_argument('groups', **groups_args)
+    # devman ls
+    sp_ls = subparsers.add_parser('ls', description='List configured repo-groups')
+    sp_ls.add_argument('groups', **groups_args)
     
     # devman fetch
     sp_fetch = subparsers.add_parser('fetch')
@@ -159,7 +168,10 @@ class DevMan:
   def iterRepos(self, create=False, clean=True):
     for group, repo_definition in self.getRepos().items():
       for repo_name, repo_url in repo_definition.items():
-        repo_path = self.repo_clone_path + repo_name
+        if group == 'base':
+          repo_path = self.repo_clone_path + repo_name
+        else:
+          repo_path = self.repo_clone_path + group + "/" + repo_name
         try:
           repo = Repo(repo_path)
           if repo.bare == True:
@@ -246,7 +258,7 @@ class DevMan:
         else:
           pass
 
-  # TODO: diff
+  # TODO: diff 
   # TODO: unstaged
     
   def st(self):
@@ -277,7 +289,7 @@ class DevMan:
         else:
           raise e
 
-  def list(self):
+  def ls(self):
     print '------------------------------------------------'
     print '| Available                                    |'
     print '------------------------------------------------'
@@ -288,8 +300,8 @@ class DevMan:
     pp.pprint(self.getRepos())
 
   def run(self):
-    if self.command == 'list':
-      self.list()
+    if self.command == 'ls':
+      self.ls()
     elif self.command == 'clone':
       self.clone()
     elif self.command == 'fetch':
@@ -303,15 +315,6 @@ class DevMan:
     else:
       print 'Error command not found.'
       exit(1)
-
-  # Utils
-  def sh(self, cmd):
-    try: 
-      output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
-    except Exception, e:
-      output = str(e.output)
-    return output
-
 
 def main():
   devman = DevMan()
