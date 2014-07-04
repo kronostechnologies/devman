@@ -11,6 +11,5 @@ fi
 
 if [ ! -h ~/bin/devman ]
 then
-  
   ln -s $DOT/devman ~/bin/devman
 fi
