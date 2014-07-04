@@ -1,2 +1,6 @@
-'dev':
+'root':
   'devman' : 'kronostechnologies/devman.git'
+'subfolder1' : 
+  'folder1' : 'gitusername/git-repo1.git'
+'subfolder2' : 
+  'folder1' : 'gitusername/git-repo2.git'
