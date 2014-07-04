@@ -63,11 +63,10 @@ class DevMan:
     self.config = Conf().getOverridenConfig()
     self.args = self.argument_parser()
     self.command = self.args.cmd
-    self.groups = flatten(self.args.groups)
+
     
-    if self.groups == []:
-      self.groups.append(self.config['default']['repo_group'])
-    
+    self.repo_conf_file = self.config['default']['repo_conf_file']
+
     target_os = platform.system()
     
     # TODO: use config
@@ -97,23 +96,32 @@ class DevMan:
       print target_os
       exit(1)
     
-    self.repo_conf_file = self.config['default']['repo_conf_file']
-    # load repos definition
-    self.repos = self.loadRepos()
-    
     # check if github is configured
     if self.git_binary.find("git") == -1:
       print "Please install git before you proceed any further."
       exit(1)
+
     # create install path if it doesn't already exist
     if not os.path.isdir(self.repo_clone_path):
       sh("mkdir -p " + self.repo_clone_path)
+
+    # process given args before loading repos
+    if self.args.all:
+      self.groups = self.getAllGroups()
+    elif flatten(self.args.groups) == []:
+      self.groups.append(self.config['default']['repo_group'])
+    else:
+      self.groups = flatten(self.args.groups)
+
+    # load repos definition
+    self.repos = self.loadRepos()
+    
   
   def argument_parser(self):
     # arguments definitions 
     groups_args = dict(metavar='RepoGroup', action='append', type=str, nargs='*', help='a group of git repos to work on')
     parser = ArgumentParser(description='DevMan')
-    
+    parser.add_argument('-a', '--all', action='store_true', default=False, help='Process all known repogroups', dest='all')
     subparsers = parser.add_subparsers(title='cmd', description="Command to perform on all repositories.", dest='cmd')
     
     # devman clone
@@ -144,6 +152,15 @@ class DevMan:
     
     return parser.parse_args()
   
+  def getAllGroups(self):
+    all_groups= []
+    repo_conf = os.path.join(install_dir, self.repo_conf_file)
+    stream = open(repo_conf, 'r')
+    repo_list = yaml.safe_load(stream)
+    for group_name, group_config in repo_list.items():
+        all_groups.append(group_name)
+    return all_groups
+
   # #
   # return repos from group
   # # 
@@ -186,6 +203,7 @@ class DevMan:
           else:
             print 'Error: Repository %s does not exist. Please use git clone first.' % repo_name
             exit(1)
+
 
   # #
   # Load git repos definition from yaml files
