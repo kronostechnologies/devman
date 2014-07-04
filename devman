@@ -156,10 +156,10 @@ class DevMan:
   def iterRepos(self, create=False, clean=True):
     for group, repo_definition in self.getRepos().items():
       for repo_name, repo_url in repo_definition.items():
-        if group == 'base':
-          repo_path = self.repo_clone_path + repo_name
+        if group == 'root':
+          repo_path = os.path.join(self.repo_clone_path,repo_name)
         else:
-          repo_path = self.repo_clone_path + group + "/" + repo_name
+          repo_path = os.path.join(self.repo_clone_path, group, repo_name)
         try:
           repo = Repo(repo_path)
           if repo.bare == True:
@@ -193,7 +193,7 @@ class DevMan:
   # #
   def loadRepos(self):
     # load yaml file
-    repo_conf = install_dir + '/' + self.repo_conf_file
+    repo_conf = os.path.join(install_dir, self.repo_conf_file)
     stream = open(repo_conf, 'r')
     self.repo_list = yaml.safe_load(stream)
 
