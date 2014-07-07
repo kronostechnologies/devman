@@ -266,12 +266,43 @@ class DevMan:
         else:
           pass
 
-  # TODO: diff 
-  # TODO: unstaged
     
   def st(self):
     for name, path, url, repo in self.iterRepos(clean=False):
-      print "{0} [{1}]".format(name, repo.head.reference.name)
+
+      dirty = ""
+      staged = ""
+
+      [status, out, err] = repo.git.execute(["git", "diff", "--no-ext-diff", "--quiet", "--exit-code"], with_extended_output=True, with_exceptions=False)
+      if status != 0:
+        dirty = "*"
+
+      [status, out, err] = repo.git.execute(["git", "rev-parse", "--quiet", "--verify", "HEAD", "--"], with_extended_output=True, with_exceptions=False)
+      if status == 0:
+        [status, out, err] = repo.git.execute(["git", "diff-index", "--cached", "--quiet", "HEAD", "--"], with_extended_output=True, with_exceptions=False)
+        if status == 1:
+          staged = "+"
+      else:
+        staged = "#"
+
+
+      rev = "origin/{0}...HEAD".format(repo.head.reference.name)
+      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev])
+
+      upstream_status = ""
+      if out != "":
+        [behind, ahead] = out.split("\t")
+        if behind == "0" and ahead == "0" :
+          upstream_status = "="
+        elif behind == "0":
+          upstream_status = ">"
+        elif ahead == "0":
+          upstream_status = "<"
+        else: 
+          upstream_status = "<>"
+        
+
+      print "{0} ({1}{2}{3}{4})".format(name, repo.head.reference.name, dirty, staged, upstream_status)
       if repo.untracked_files:
           for filename in repo.untracked_files:
               print "  + " + filename
