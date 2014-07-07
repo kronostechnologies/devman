@@ -109,6 +109,7 @@ class DevMan:
     if self.args.all:
       self.groups = self.getAllGroups()
     elif flatten(self.args.groups) == []:
+      self.groups = []
       self.groups.append(self.config['default']['repo_group'])
     else:
       self.groups = flatten(self.args.groups)
