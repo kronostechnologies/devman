@@ -287,7 +287,7 @@ class DevMan:
 
 
       rev = "origin/{0}...HEAD".format(repo.head.reference.name)
-      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev])
+      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev], with_exceptions=False)
 
       upstream_status = ""
       if out != "":
