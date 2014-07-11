@@ -82,7 +82,6 @@ class DevMan:
       self.git_login = sh("ssh git@github.com")
     elif target_os == 'Darwin':
       self.repo_clone_path = os.path.expanduser(self.config['default']['repo_clone_path'])
-      self.repo_clone_path = self.config['default']['repo_clone_path']
       self.git_url = self.config['default']['git_baseurl']
       self.git_binary = sh("which git")
       self.git_login = sh("ssh git@github.com")
