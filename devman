@@ -67,6 +67,7 @@ class DevMan:
 
     
     self.repo_conf_file = self.config['default']['repo_conf_file']
+    self.release_branch = self.config['default']['release_branch']
 
     target_os = platform.system()
     
@@ -300,9 +301,19 @@ class DevMan:
           upstream_status = "<"
         else: 
           upstream_status = "<>"
+      
+
+      rev = "origin/{0}...origin/{1}".format(self.release_branch, repo.head.reference.name)
+      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev], with_exceptions=False)
+
+      release_status = ""
+      if out != "":
+        [behind, ahead] = out.split("\t")
+        if(ahead == "0"):
+          release_status=" R"
         
 
-      print "{0} ({1}{2}{3}{4})".format(name, repo.head.reference.name, dirty, staged, upstream_status)
+      print "{0} ({1}{2}{3}{4}{5})".format(name, repo.head.reference.name, dirty, staged, upstream_status, release_status)
       if repo.untracked_files:
           for filename in repo.untracked_files:
               print "  + " + filename
