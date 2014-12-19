@@ -161,6 +161,11 @@ class DevMan:
    Unreleased - Dev branch contains commits not merged into release branch''', formatter_class=RawTextHelpFormatter)
     sp_st.add_argument('groups', **groups_args)
     
+    # devman exec
+    sp_exec = subparsers.add_parser('exec', description='Execute command --cmd on selected repo-groups. Current dir is set to the repo path.')
+    sp_exec.add_argument('-e', '--exec', help="Pass the --exec option when executing command on repos", action="store", dest="execCmd")
+    sp_exec.add_argument('groups', **groups_args)
+    
     return parser.parse_args()
   
   def getAllGroups(self):
@@ -361,6 +366,12 @@ class DevMan:
         else:
           raise e
 
+  # Execute command on all repos
+  def repoExec(self, cmd):
+    for name, path, url, repo in self.iterRepos():
+      os.chdir(path)
+      os.system(cmd);
+
   def ls(self):
     print '------------------------------------------------'
     print '| Available                                    |'
@@ -384,9 +395,12 @@ class DevMan:
       self.co(self.args.branch)
     elif self.command == 'st':
       self.st()
+    elif self.command == 'exec':
+      self.repoExec(self.args.execCmd)
     else:
-      print 'Error command not found.'
+      print "Error command not found: {0}".format(self.command) 
       exit(1)
+  
 
 # Thx stackoverflow!
 def merge(a, b, path=None):
