@@ -28,6 +28,7 @@ from git import InvalidGitRepositoryError
 # arguments
 from argparse import ArgumentParser
 from argparse import SUPPRESS
+from argparse import RawTextHelpFormatter
 from ConfigParser import SafeConfigParser
 import yaml
 
@@ -67,7 +68,9 @@ class DevMan:
 
     
     self.repo_conf_file = self.config['default']['repo_conf_file']
+    self.dev_branch = self.config['default']['dev_branch']
     self.release_branch = self.config['default']['release_branch']
+    self.stable_branch = self.config['default']['stable_branch']
 
     target_os = platform.system()
     
@@ -149,7 +152,13 @@ class DevMan:
     sp_ff.add_argument('groups', **groups_args)
     
     # devman st
-    sp_st = subparsers.add_parser('st', description='git st')
+    sp_st = subparsers.add_parser('st', description='''Show status for all repos
+<repo name> (<current branch><upstream status> <release status>)
+ upstream status: see _GIT_PS1
+ release status:
+   Released - All dev branch commits are merged into release and stable branches.
+   Staging - A release is staging in release branch
+   Unreleased - Dev branch contains commits not merged into release branch''', formatter_class=RawTextHelpFormatter)
     sp_st.add_argument('groups', **groups_args)
     
     return parser.parse_args()
@@ -271,6 +280,9 @@ class DevMan:
   def st(self):
     for name, path, url, repo in self.iterRepos(clean=False):
 
+      # Make sure remote branch are updated
+      repo.remotes.origin.fetch(prune=False, progress=DisProgress())
+    
       dirty = ""
       staged = ""
 
@@ -302,16 +314,26 @@ class DevMan:
         else: 
           upstream_status = "<>"
       
-
-      rev = "origin/{0}...origin/{1}".format(self.release_branch, repo.head.reference.name)
-      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev], with_exceptions=False)
-
+      rev = "origin/{0}...origin/{1}".format(self.release_branch, self.dev_branch)
+      grep_pattern = "^(?!Merge branch '{0}').+$".format(self.release_branch);
+      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev, '--grep', grep_pattern, '--perl-regexp'], with_exceptions=False)
       release_status = ""
       if out != "":
-        [behind, ahead] = out.split("\t")
-        if(ahead == "0"):
-          release_status=" R"
-        
+        [behind, release_ahead] = out.split("\t")
+      
+      rev = "origin/{0}...origin/{1}".format(self.stable_branch, self.release_branch)
+      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev], with_exceptions=False)
+      if out != "":
+        [behind, stable_ahead] = out.split("\t")
+      
+      if release_ahead == "0" and stable_ahead == "0":
+        release_status=" Released"
+      elif release_ahead == "0":
+        release_status=" Staging"
+      elif stable_ahead == "0":
+        release_status=" Unreleased"
+      else:
+        release_status=" Staging+Unreleased"
 
       print "{0} ({1}{2}{3}{4}{5})".format(name, repo.head.reference.name, dirty, staged, upstream_status, release_status)
       if repo.untracked_files:

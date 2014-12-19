@@ -55,6 +55,14 @@ devman co -b <branch_name> [<group>]
 # list all configured repo groups
 devman ls [<group>] 
 
+# Get the status for all repos
+# <repo name> (<current branch><upstream status> <release status>)
+# upstream status: see _GIT_PS1
+# release status:
+#  Released - All dev branch commits are merged into release and stable branches.
+#  Staging - A release is staging in release branch
+#  Unreleased - Dev branch contains commits not merged into release branch
+devman st [<group>]
 ```
 
 ## INSTALL
