@@ -10,7 +10,7 @@ else
 fi
 
 # Git, python, PHP & coreutils
-for pkg in coreutils git php56 python; do
+for pkg in coreutils git php56 composer python; do
   if brew list -1 | grep -q "^${pkg}\$"; then
     echo "Package '$pkg' is installed, upgrading to latest..."
     brew upgrade $pkg 2> /dev/null || true
