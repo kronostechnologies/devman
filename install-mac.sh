@@ -30,6 +30,9 @@ else
   pip install gitdb
 fi
 
+pip install gitpython --upgrade
+pip install pyyaml --upgrade
+
 # Use GNU readlink from coreutils
 DOT="$(dirname $(greadlink -f ${BASH_SOURCE[0]}))"
 

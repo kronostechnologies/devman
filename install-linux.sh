@@ -13,3 +13,6 @@ if [ ! -h ~/bin/devman ]
 then
   ln -s $DOT/devman ~/bin/devman
 fi
+
+pip install gitpython --upgrade
+pip install pyyaml --upgrade
