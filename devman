@@ -321,7 +321,7 @@ class DevMan:
       
       rev = "origin/{0}...origin/{1}".format(self.release_branch, self.dev_branch)
       grep_pattern = "^(?!Merge branch '{0}').+$".format(self.release_branch);
-      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev, '--grep', grep_pattern, '--perl-regexp'], with_exceptions=False)
+      out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev, '--grep', grep_pattern], with_exceptions=False)
       release_status = ""
       if out != "":
         [behind, release_ahead] = out.split("\t")
