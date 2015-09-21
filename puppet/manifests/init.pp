@@ -45,6 +45,14 @@ class devman ($folder, $user, $config_file){
     default             : { fail('not supported') }
   }
 
+  class { 'python':
+    version    => 'system',
+    pip        => 'present',
+  } ->
+  python::pip { 'pyyaml':
+  } ->
+  python::pip { 'gitpython':
+  } ->
   vcsrepo { "${folder}/devman":
     ensure   => present,
     provider => git,
@@ -56,14 +64,6 @@ class devman ($folder, $user, $config_file){
     creates => "/home/${user}/bin/devman"
   }
 
-  class { 'python':
-    version    => 'system',
-    pip        => 'present',
-  }
-  python::pip { 'pyyaml':
-  }
-  python::pip { 'gitpython':
-  }
 
   file { "${folder}/devman/repos.yaml":
     ensure => 'link',
