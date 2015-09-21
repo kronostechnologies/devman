@@ -17,8 +17,6 @@ override_file = 'devman.local.conf'
 os.environ['GIT_SSH'] = os.path.join(install_dir, 'ssh_wrapper')
 os.environ['LANGUAGE'] = 'en_US:en_US'
 ######
-# load module from local modules path
-sys.path.append(os.path.join(install_dir, 'modules'))
 
 from git import Repo
 from git import GitCommandError
