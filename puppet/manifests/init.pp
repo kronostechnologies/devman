@@ -35,7 +35,7 @@
 #
 # Copyright 2015 Your name here, unless otherwise noted.
 #
-class devman ($folder, $user){
+class devman ($folder, $user, $config_file){
 
   # install devman
   case $operatingsystem {
@@ -59,5 +59,14 @@ class devman ($folder, $user){
   class { 'python':
     version    => 'system',
     pip        => 'present',
+  }
+  python::pip { 'pyyaml':
+  }
+  python::pip { 'gitpython':
+  }
+
+  file { "${folder}/devman/repos.yaml":
+    ensure => 'link',
+    target => $config_file,
   }
 }
