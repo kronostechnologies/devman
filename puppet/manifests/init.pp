@@ -55,4 +55,9 @@ class devman ($folder, $user){
     user    => $user,
     creates => "/home/${user}/bin/devman"
   }
+
+  class { 'python':
+    version    => 'system',
+    pip        => 'present',
+  }
 }
