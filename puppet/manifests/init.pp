@@ -38,14 +38,6 @@
 class devman ($folder, $user){
 
   # install devman
-
-  vcsrepo { "${folder}/devman":
-    ensure   => present,
-    provider => git,
-    user     => $user,
-    source   => 'git@github.com:kronostechnologies/devman.git',
-  }
-
   case $operatingsystem {
     'Darwin'            : { $devman_install = "${folder}/devman/install-mac.sh" }
     'RedHat', 'CentOS'  : { $devman_install = "${folder}/devman/install-linux.sh" }
@@ -53,6 +45,12 @@ class devman ($folder, $user){
     default             : { fail('not supported') }
   }
 
+  vcsrepo { "${folder}/devman":
+    ensure   => present,
+    provider => git,
+    user     => $user,
+    source   => 'git@github.com:kronostechnologies/devman.git',
+  } ->
   exec { $devman_install:
     user    => $user,
     creates => "/home/${user}/bin/devman"
