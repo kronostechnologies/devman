@@ -2,8 +2,6 @@
 set -e
 DOT="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
 
-sudo aptitude install git -y
-
 if [ ! -d ~/bin ]
 then
   mkdir ~/bin
