@@ -366,9 +366,12 @@ class DevMan:
 
   # Execute command on all repos
   def repoExec(self, cmd):
-    for name, path, url, repo in self.iterRepos():
-      os.chdir(path)
-      os.system(cmd);
+    if not cmd:
+      print "exec expects --exec option. See `devman exec --help`"
+    else:
+      for name, path, url, repo in self.iterRepos():
+        os.chdir(path)
+        os.system(cmd);
 
   def ls(self):
     print '------------------------------------------------'
