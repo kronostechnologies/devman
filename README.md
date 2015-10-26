@@ -32,12 +32,6 @@ Manage your git repositories with your Workflow in mind.
     * https access (using a .netrc file) or
     * using git-credential-winstore plugin (Windows)
 
-### OS X specific
-
-- Install latest OS X Vagrant from : http://www.vagrantup.com/downloads.html
-- Install latest Chef SDK from : https://downloads.chef.io/chef-dk/mac/
-- Uninstall older PHP ex. : `brew uninstall --force php54`
-
 ## USAGE
 
 ```
