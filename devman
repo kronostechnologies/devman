@@ -209,14 +209,16 @@ class DevMan:
           exit(1)
         except NoSuchPathError:
           if create:
-            print "Cloning " + repo_name
-            this_repo = Repo.clone_from(repo_url, repo_path , progress=DisProgress())
-            for submodule in this_repo.submodules:
-              print "Now Initializing submodule:" + str(submodule)
-              submodule.update(progress=DisProgress())
+            try:
+              print "Cloning " + repo_name
+              this_repo = Repo.clone_from(repo_url, repo_path , progress=DisProgress())
+              for submodule in this_repo.submodules:
+                print "Now Initializing submodule:" + str(submodule)
+                submodule.update(progress=DisProgress())
+            except Exception as e:
+              print "Can't clone {0}: {1}".format(repo_name, e)
           else:
             print 'Error: Repository %s does not exist. Please use git clone first.' % repo_name
-            exit(1)
 
 
   # #
@@ -316,6 +318,9 @@ class DevMan:
           upstream_status = "<"
         else: 
           upstream_status = "<>"
+
+      release_ahead = ""
+      stable_ahead = ""
       
       rev = "origin/{0}...origin/{1}".format(self.release_branch, self.dev_branch)
       grep_pattern = "^(?!Merge branch '{0}').+$".format(self.release_branch);
