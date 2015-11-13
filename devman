@@ -353,7 +353,13 @@ class DevMan:
         print "Fast-forward from origin: {0}".format(name)
         cur_branch = repo.head.reference.name
         o = repo.remotes.origin
-        o.pull(cur_branch, ff_only=True, progress=DisProgress())
+        try:
+            o.pull(cur_branch, ff_only=True, progress=DisProgress())
+        except GitCommandError as e:
+            if e.status == 2:
+                print 'Error: Branch {0} does not exist on remote. Please une git push first.'.format(cur_branch)
+            else:
+                raise e
 
   def fetch(self, prune):
     for name, path, url, repo in self.iterRepos():
