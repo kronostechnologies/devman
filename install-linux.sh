@@ -2,14 +2,9 @@
 set -e
 DOT="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
 
-if [ ! -d ~/bin ]
+if [ ! -h /usr/local/bin/devman ]
 then
-  mkdir ~/bin
-fi
-
-if [ ! -h ~/bin/devman ]
-then
-  ln -s $DOT/devman ~/bin/devman
+  ln -s $DOT/devman /usr/local/bin/devman
 fi
 
 pip install gitpython --upgrade
