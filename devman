@@ -41,7 +41,7 @@ def flatten(lst):
 def sh(cmd):
   try: 
     output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
-  except Exception, e:
+  except Exception as e:
     output = str(e.output)
   return output
 
@@ -52,7 +52,7 @@ from git.util import RemoteProgress
 class DisProgress(RemoteProgress):
   if debug:
     def line_dropped(self, line):
-      print('{0}'.format(line))
+      print('{}'.format(line))
     def update(self, op_code, cur_count, max_count=None, message=''):
       print('{0} {1}/{2} {3}'.format(op_code, cur_count, max_count, message))
 
@@ -94,18 +94,17 @@ class DevMan:
       self.git_binary = sh("which git")
       self.git_login = sh("ssh git@github.com")
     else: 
-      print 'OS not supported yet'
-      print target_os
+      print("OS not supported yet: {}".format(target_os))
       exit(1)
     
     # check if github is configured
-    if self.git_binary.find("git") == -1:
-      print "Please install git before you proceed any further."
+    if self.git_binary.find(b"git") == -1:
+      print("Please install git before you proceed any further.")
       exit(1)
 
     # create install path if it doesn't already exist
     if not os.path.isdir(self.repo_clone_path):
-      sh("mkdir -p " + self.repo_clone_path)
+      sh("mkdir -p {}".format(self.repo_clone_path))
 
     # process given args before loading repos
     if self.args.all:
@@ -194,31 +193,31 @@ class DevMan:
         try:
           repo = Repo(repo_path)
           if repo.bare == True:
-            print "Cannot process bare repo: %s" % repo_name 
+            print("Can't process bare repo: {}".format(repo_name))
             pass
           elif repo.is_dirty() :
               if clean:
-                  print "Cannot process dirty repo: %s" % repo_name
+                  print("Can't process dirty repo: {}".format(repo_name))
                   pass
               else:
                   yield repo_name, repo_path, repo_url, repo
           else:
             yield repo_name, repo_path, repo_url, repo
         except InvalidGitRepositoryError:
-          print "Error: Repository " + repo_name + " is not a git repo. Remove folder and try again."
+          print("Error: Repository {} isn't a git repo. Remove folder and try again.".format(repo_name))
           exit(1)
         except NoSuchPathError:
           if create:
             try:
-              print "Cloning " + repo_name
+              print("Cloning {}".format(repo_name))
               this_repo = Repo.clone_from(repo_url, repo_path , progress=DisProgress())
               for submodule in this_repo.submodules:
-                print "Now Initializing submodule:" + str(submodule)
+                print("Initializing submodule: {}".format(str(submodule)))
                 submodule.update(progress=DisProgress())
             except Exception as e:
-              print "Can't clone {0}: {1}".format(repo_name, e)
+              print("Error: Can't clone {}: {}".format(repo_name, e))
           else:
-            print 'Error: Repository %s doesn\'t exist. Please use git clone first.' % repo_name
+            print("Error: Repository {} doesn't exist. Please use git clone first.".format(repo_name))
 
 
   # #
@@ -241,18 +240,18 @@ class DevMan:
           updated_repos[repo_name] = remote_url
         repos[group] = updated_repos
       else:
-        raise Exception("Error: could not find group {0} in {1}.".format(group, repo_conf))
+        raise Exception("Error: Couldn't find group {} in {}.".format(group, repo_conf))
     return repos
 
   def git_clone(self, path, url):
     try:
-      print "Cloning: " + name
+      print("Cloning: {}".format(name))
       this_repo = Repo.clone_from(url, path , progress=DisProgress())
       for submodule in this_repo.submodules:
-        print "Initializing submodule:" + str(submodule)
+        print("Initializing submodule: {}".format(str(submodule)))
         submodule.update(progress=DisProgress())
     except GitCommandError:
-      raise Exception("Error: Could not clone repo. %s" % str(e))
+      raise Exception("Error: Couldn't clone repo {}: {}".format(name, str(e)))
 
   # #
   # repo actions
@@ -273,7 +272,7 @@ class DevMan:
       if remote_branch in remote_branches:
         # we are not already on this branch
         if branch != current_branch:
-          print "Checking out {0} on {1}".format(branch, name)
+          print("Checking out {} on {}".format(branch, name))
           if branch in local_branches:
             repo.git.checkout(branch)
           else:
@@ -290,7 +289,7 @@ class DevMan:
         repo.remotes.origin.fetch(prune=False, progress=DisProgress())
       except GitCommandError as e:
         if e.status == 128:
-          print 'Error: Can\'t fetch repository {0} on remote.'.format(name)
+          print("Error: Can't fetch repository {} on remote.".format(name))
         else:
           raise e
       dirty = ""
@@ -309,7 +308,7 @@ class DevMan:
         staged = "#"
 
 
-      rev = "origin/{0}...HEAD".format(repo.head.reference.name)
+      rev = "origin/{}...HEAD".format(repo.head.reference.name)
       out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev], with_exceptions=False)
 
       upstream_status = ""
@@ -348,23 +347,23 @@ class DevMan:
       else:
         release_status=" Staging+Unreleased"
 
-      print "{0} ({1}{2}{3}{4}{5})".format(name, repo.head.reference.name, dirty, staged, upstream_status, release_status)
+      print("{0} ({1}{2}{3}{4}{5})".format(name, repo.head.reference.name, dirty, staged, upstream_status, release_status))
       if repo.untracked_files:
           for filename in repo.untracked_files:
-              print "  + " + filename
+              print("  + {}".format(filename))
 
   def ff(self):
     for name, path, url, repo in self.iterRepos():
-        print "Fast-forward from origin: {0}".format(name)
+        print("Fast-forward from origin: {}".format(name))
         cur_branch = repo.head.reference.name
         o = repo.remotes.origin
         try:
             o.pull(cur_branch, ff_only=True, progress=DisProgress())
         except GitCommandError as e:
             if e.status == 1:
-                print 'Error: Repository {0} doesn\'t exist on remote.'.format(name)
+                print("Error: Repository {} doesn't exist on remote.".format(name))
             elif e.status == 2:
-                print 'Error: Branch {0} doesn\'t exist on remote. Please use git push first.'.format(cur_branch)
+                print("Error: Branch {} doesn't exist on remote. Please use git push first.".format(cur_branch))
             else:
                 raise e
 
@@ -372,33 +371,33 @@ class DevMan:
     for name, path, url, repo in self.iterRepos():
       try:
         if prune:
-          print "Fetch prune: {0}".format(name)
+          print("Fetch prune: {}".format(name))
         else:
-          print "Fetch: {0} ".format(name)
+          print("Fetch: {} ".format(name))
         repo.remotes.origin.fetch(prune=prune, progress=DisProgress())
       except AssertionError as e:
         if prune:
-          print "Catch assertion error probably due to pruned branch"
+          print("Catch assertion error probably due to pruned branch")
         else:
           raise e
 
   # Execute command on all repos
   def repoExec(self, cmd):
     if not cmd:
-      print "exec expects --exec option. See `devman exec --help`"
+      print("exec expects --exec option. See `devman exec --help`")
     else:
       for name, path, url, repo in self.iterRepos():
         os.chdir(path)
         os.system(cmd);
 
   def ls(self):
-    print '------------------------------------------------'
-    print '| Available                                    |'
-    print '------------------------------------------------'
+    print('------------------------------------------------')
+    print('| Available                                    |')
+    print('------------------------------------------------')
     pp.pprint(self.repo_list)
-    print '------------------------------------------------'
-    print '| Now                                          |'
-    print '------------------------------------------------'
+    print('------------------------------------------------')
+    print('| Now                                          |')
+    print('------------------------------------------------')
     pp.pprint(self.getRepos())
 
   def run(self):
@@ -417,7 +416,7 @@ class DevMan:
     elif self.command == 'exec':
       self.repoExec(self.args.execCmd)
     else:
-      print "Error command not found: {0}".format(self.command) 
+      print("Error: Command not found: {}".format(self.command))
       exit(1)
   
 
