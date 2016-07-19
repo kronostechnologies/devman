@@ -27,7 +27,10 @@ from git import InvalidGitRepositoryError
 from argparse import ArgumentParser
 from argparse import SUPPRESS
 from argparse import RawTextHelpFormatter
-from ConfigParser import SafeConfigParser
+try:
+  from ConfigParser import SafeConfigParser
+except ImportError:
+  from configparser import SafeConfigParser
 import yaml
 
 import pprint as pp
@@ -125,6 +128,7 @@ class DevMan:
     parser = ArgumentParser(description='DevMan')
     parser.add_argument('-a', '--all', action='store_true', default=False, help='Process all known repogroups', dest='all')
     subparsers = parser.add_subparsers(title='cmd', description="Command to perform on all repositories.", dest='cmd')
+    subparsers.required = True
     
     # devman clone
     sp_clone = subparsers.add_parser('clone', description='git clone on selected repo-groups')
@@ -159,7 +163,7 @@ class DevMan:
     sp_st.add_argument('groups', **groups_args)
     
     # devman exec
-    sp_exec = subparsers.add_parser('exec', description='Execute command --cmd on selected repo-groups. Current dir is set to the repo path.')
+    sp_exec = subparsers.add_parser('exec', description='Execute command --exec on selected repo-groups. Current dir is set to the repo path.')
     sp_exec.add_argument('-e', '--exec', help="Pass the --exec option when executing command on repos", action="store", dest="execCmd")
     sp_exec.add_argument('groups', **groups_args)
     
