@@ -218,7 +218,7 @@ class DevMan:
             except Exception as e:
               print "Can't clone {0}: {1}".format(repo_name, e)
           else:
-            print 'Error: Repository %s does not exist. Please use git clone first.' % repo_name
+            print 'Error: Repository %s doesn\'t exist. Please use git clone first.' % repo_name
 
 
   # #
@@ -286,8 +286,13 @@ class DevMan:
     for name, path, url, repo in self.iterRepos(clean=False):
 
       # Make sure remote branch are updated
-      repo.remotes.origin.fetch(prune=False, progress=DisProgress())
-    
+      try:
+        repo.remotes.origin.fetch(prune=False, progress=DisProgress())
+      except GitCommandError as e:
+        if e.status == 128:
+          print 'Error: Can\'t fetch repository {0} on remote.'.format(name)
+        else:
+          raise e
       dirty = ""
       staged = ""
 
@@ -356,8 +361,10 @@ class DevMan:
         try:
             o.pull(cur_branch, ff_only=True, progress=DisProgress())
         except GitCommandError as e:
-            if e.status == 2:
-                print 'Error: Branch {0} does not exist on remote. Please une git push first.'.format(cur_branch)
+            if e.status == 1:
+                print 'Error: Repository {0} doesn\'t exist on remote.'.format(name)
+            elif e.status == 2:
+                print 'Error: Branch {0} doesn\'t exist on remote. Please use git push first.'.format(cur_branch)
             else:
                 raise e
 
