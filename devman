@@ -365,7 +365,7 @@ class DevMan:
             o.pull(cur_branch, ff_only=True, progress=DisProgress())
         except GitCommandError as e:
             if e.status == 1:
-                print("Error: Repository {} doesn't exist on remote.".format(name))
+                print("Error: Repository {} or branch {} doesn't exist on remote.".format(name, cur_branch))
             elif e.status == 2:
                 print("Error: Branch {} doesn't exist on remote. Please use git push first.".format(cur_branch))
             else:
