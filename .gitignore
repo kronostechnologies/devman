@@ -5,3 +5,4 @@ devman.local.conf
 .pydevproject
 *.pyc
 .idea/
+.tags
