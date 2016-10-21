@@ -221,42 +221,42 @@ class DevMan:
                 else:
                     repo_path = os.path.join(self.repo_clone_path, group,
                                              repo_name)
-                    try:
-                        repo = Repo(repo_path)
-                        if repo.bare is True:
-                            print("Can't process bare repo: {}".format(
-                                                                    repo_name))
+                try:
+                    repo = Repo(repo_path)
+                    if repo.bare is True:
+                        print("Can't process bare repo: {}".format(
+                                                                repo_name))
+                        pass
+                    elif repo.is_dirty():
+                        if clean:
+                            print("Can't process dirty repo: {}".format(
+                                                                repo_name))
                             pass
-                        elif repo.is_dirty():
-                            if clean:
-                                print("Can't process dirty repo: {}".format(
-                                                                    repo_name))
-                                pass
-                            else:
-                                yield repo_name, repo_path, repo_url, repo
                         else:
                             yield repo_name, repo_path, repo_url, repo
-                    except InvalidGitRepositoryError:
-                        print("Error: Repository {} isn't a git repo. Remove \
-                            folder and try again.".format(repo_name))
-                        exit(1)
-                    except NoSuchPathError:
-                        if create:
-                            try:
-                                print("Cloning {}".format(repo_name))
-                                this_repo = Repo.clone_from(
-                                    repo_url, repo_path,
-                                    progress=DisProgress())
-                                for submodule in this_repo.submodules:
-                                    print("Initializing submodule: {}".format(
-                                        str(submodule)))
-                                    submodule.update(progress=DisProgress())
-                            except Exception as e:
-                                print("Error: Can't clone {}: {}".format(
-                                                                repo_name, e))
-                        else:
-                            print("Error: Repository {} doesn't exist. \
-                                Please use git clone first.".format(repo_name))
+                    else:
+                        yield repo_name, repo_path, repo_url, repo
+                except InvalidGitRepositoryError:
+                    print("Error: Repository {} isn't a git repo. Remove \
+                        folder and try again.".format(repo_name))
+                    exit(1)
+                except NoSuchPathError:
+                    if create:
+                        try:
+                            print("Cloning {}".format(repo_name))
+                            this_repo = Repo.clone_from(
+                                repo_url, repo_path,
+                                progress=DisProgress())
+                            for submodule in this_repo.submodules:
+                                print("Initializing submodule: {}".format(
+                                    str(submodule)))
+                                submodule.update(progress=DisProgress())
+                        except Exception as e:
+                            print("Error: Can't clone {}: {}".format(
+                                                            repo_name, e))
+                    else:
+                        print("Error: Repository {} doesn't exist. \
+                            Please use git clone first.".format(repo_name))
 
     # Load git repos definition from yaml file
     # Merge configuration layer from default config
@@ -273,7 +273,7 @@ class DevMan:
                 for repo_name, repo_url in self.repo_list[group].items():
                     remote_url = self.git_url + repo_url
                     updated_repos[repo_name] = remote_url
-                    repos[group] = updated_repos
+                repos[group] = updated_repos
             else:
                 raise Exception("Error: Couldn't find group {} in {}.".format(
                                                             group, repo_conf))
@@ -306,17 +306,17 @@ class DevMan:
             current_branch = str(repo.active_branch)
             remote_branch = "origin/" + branch
 
-        # this remote branch exists
-        if remote_branch in remote_branches:
-            # we are not already on this branch
-            if branch != current_branch:
-                print("Checking out {} on {}".format(branch, name))
-                if branch in local_branches:
-                    repo.git.checkout(branch)
+            # this remote branch exists
+            if remote_branch in remote_branches:
+                # we are not already on this branch
+                if branch != current_branch:
+                    print("Checking out {} on {}".format(branch, name))
+                    if branch in local_branches:
+                        repo.git.checkout(branch)
+                    else:
+                        repo.git.checkout(remote_branch, b=branch)
                 else:
-                    repo.git.checkout(remote_branch, b=branch)
-            else:
-                pass
+                    pass
 
     def st(self):
         # Make sure remote branches are updated
@@ -351,8 +351,8 @@ class DevMan:
                     with_exceptions=False)
                 if status == 1:
                     staged = "+"
-                else:
-                    staged = "#"
+            else:
+                staged = "#"
 
             rev = "origin/{}...HEAD".format(repo.head.reference.name)
             out = repo.git.execute(
