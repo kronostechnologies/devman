@@ -95,7 +95,7 @@ class DevMan:
             self.git_url = self.config['default']['git_baseurl']
             self.git_binary = sh("which git")
             self.git_login = sh("ssh git@github.com")
-        elif target_os == 'CYGWIN_NT-6.1':
+        elif target_os.startswith('CYGWIN_NT-'):
             self.repo_clone_path = os.path.expanduser(
                                    self.config['cygwin']['repo_clone_path'])
             self.git_url = self.config['default']['git_baseurl']
