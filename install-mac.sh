@@ -24,14 +24,14 @@ done
 PIP_LIST=$(pip list)
 if echo $PIP_LIST | grep -q "gitdb"; then
   echo "gitdb is installed, upgrading to latest..."
-  pip install --upgrade gitdb
+  sudo pip install --upgrade gitdb
 else
   echo "Installing python gitdb"
-  pip install gitdb
+  sudo pip install gitdb
 fi
 
-pip install gitpython --upgrade
-pip install pyyaml --upgrade
+sudo pip install gitpython --upgrade
+sudo pip install pyyaml --upgrade
 
 # Use GNU readlink from coreutils
 DOT="$(dirname $(greadlink -f ${BASH_SOURCE[0]}))"
