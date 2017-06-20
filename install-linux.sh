@@ -11,5 +11,5 @@ if ! command -v devman >/dev/null 2>&1; then
   fi
 fi
 
-pip install gitpython --upgrade
-pip install pyyaml --upgrade
+sudo pip install gitpython --upgrade
+sudo pip install pyyaml --upgrade
