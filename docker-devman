@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-DOT="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
+DOT=$(dirname $0)
 
 if [ -f "$(pwd)/devman.conf" ];
 then
@@ -24,7 +24,7 @@ fi
 
 if [ -f $HOME/kronos ]
 then
-  echo "~/kronos exists as file, will not destroy it"
+  echo '~/kronos exists as file, please move it using `mv ~/kronos ~/kronos.old`'
   exit 1
 elif [ ! -d $HOME/kronos ];
 then
@@ -38,7 +38,7 @@ fi
 
 if [ ! -z "$SSH_AUTH_SOCK" ]
 then
-  ssh_agent="--volume $SSH_AUTH_SOCK:/ssh-agent --env SSH_AUTH_SOCK=/ssh-agent";
+  ssh_agent="-v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent";
 fi
 
 docker run --rm \
