@@ -1,0 +1,54 @@
+#!/bin/bash
+set -e
+DOT="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
+
+if [ -f "$(pwd)/devman.conf" ];
+then
+  conf="-v $(pwd)/devman.conf:/app/devman.conf:ro"
+elif [ -f "$DOT/devman.conf" ]
+then
+  conf="-v $DOT/devman.conf:/app/devman.conf:ro"
+else
+  conf=""
+fi
+
+if [ -f "$(pwd)/repos.yaml" ];
+then
+  repos="-v $(pwd)/repos.yaml:/app/repos.yaml:ro"
+elif [ -f "${DOT}/repos.yaml" ];
+then
+  repos="-v ${DOT}/repos.yaml:/app/repos.yaml:ro"
+else
+  repos=""
+fi
+
+if [ -f $HOME/kronos ]
+then
+  echo "~/kronos exists as file, will not destroy it"
+  exit 1
+elif [ ! -d $HOME/kronos ];
+then
+  mkdir -p $HOME/kronos
+fi
+
+if [ -d $HOME/.ssh/ ];
+then
+  ssh_conf="-v $HOME/.ssh/:/home/$USER/.ssh/:ro"
+fi
+
+if [ ! -z "$SSH_AUTH_SOCK" ]
+then
+  ssh_agent="--volume $SSH_AUTH_SOCK:/ssh-agent --env SSH_AUTH_SOCK=/ssh-agent";
+fi
+
+docker run --rm \
+  -u=$UID:$(id -g $USER) \
+  -v /etc/passwd:/etc/passwd:ro \
+  -v /etc/group:/etc/group:ro \
+  -v $HOME/kronos:/home/$USER/kronos/ \
+  $conf \
+  $repos \
+  $ssh_conf \
+  $ssh_agent \
+  -it devman "$@"
+

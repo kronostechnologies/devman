@@ -81,6 +81,14 @@ sudo ln -s `pwd`/devman ~/bin/
 cp repos.sample.yaml repos.yaml
 sudo ln -s `pwd`/devman ~/bin/
 ```
+### Docker
+
+```
+cd ~/folder-with-repos.yaml/
+./docker-devman -a clone
+
+# caveats: devman exec can only run in-container commands
+```
 
 ### Cygwin
 
@@ -100,3 +108,4 @@ Install git-credential-winstore (to save your credentials with your session)
 Manually install Python 2.7.6 (or version if you'd like to test it with)
 
     http://www.python.org/ftp/python/2.7.6/python-2.7.6.amd64.msi)
+
