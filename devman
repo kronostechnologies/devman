@@ -360,10 +360,14 @@ class DevMan:
             else:
                 staged = "#"
 
-            rev = "origin/{}...HEAD".format(repo.head.reference.name)
+            if not repo.head.is_detached:
+                rev = "origin/{}...HEAD".format(repo.head.reference.name)
+            else:
+                rev = "refs/tags/{}...HEAD".format(repo.git.describe('--tags', '--abbrev=0'))
+
             out = repo.git.execute(
                 ["git", "rev-list", "--count", "--left-right", rev],
-                with_exceptions=False)
+                with_exceptions=True)
 
             upstream_status = ""
             if out != "":
@@ -408,8 +412,13 @@ class DevMan:
             else:
                 release_status = " Staging+Unreleased"
 
+            if not repo.head.is_detached:
+                rev = repo.head.reference.name
+            else:
+                rev = "{{({})}}".format(repo.git.describe('--tags', '--abbrev=0'))
+
             print("{0} ({1}{2}{3}{4}{5})".format(name,
-                                                 repo.head.reference.name,
+                                                 rev,
                                                  dirty,
                                                  staged,
                                                  upstream_status,
@@ -421,7 +430,11 @@ class DevMan:
     def ff(self):
         for name, path, url, repo in self.iter_repos():
             print("Fast-forward from origin: {}".format(name))
-            cur_branch = repo.head.reference.name
+            if not repo.head.is_detached:
+                cur_branch = repo.head.reference.name
+            else:
+                cur_branch = repo.git.describe()
+
             o = repo.remotes.origin
             try:
                 o.pull(cur_branch, ff_only=True, progress=DisProgress())
