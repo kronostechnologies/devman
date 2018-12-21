@@ -365,12 +365,15 @@ class DevMan:
             else:
                 rev = "refs/tags/{}...HEAD".format(repo.git.describe('--tags', '--abbrev=0'))
 
-            out = repo.git.execute(
-                ["git", "rev-list", "--count", "--left-right", rev],
-                with_exceptions=True)
+            try:
+                out = repo.git.execute(["git", "rev-list", "--count", "--left-right", rev], with_exceptions=True)
+            except GitCommandError as e:
+                out = False
+                if e.status != 128:
+                    raise e
 
-            upstream_status = ""
-            if out != "":
+            upstream_status = u"\u2209".encode('utf-8')
+            if out:
                 [behind, ahead] = out.split("\t")
                 if behind == "0" and ahead == "0":
                     upstream_status = "="
@@ -404,20 +407,20 @@ class DevMan:
                 [_, stable_ahead] = out.split("\t")
 
             if release_ahead == "0" and stable_ahead == "0":
-                release_status = " Released"
+                release_status = "Released"
             elif release_ahead == "0":
-                release_status = " Staging"
+                release_status = "Staging"
             elif stable_ahead == "0":
-                release_status = " Unreleased"
+                release_status = "Unreleased"
             else:
-                release_status = " Staging+Unreleased"
+                release_status = "Staging+Unreleased"
 
             if not repo.head.is_detached:
                 rev = repo.head.reference.name
             else:
                 rev = "{{({})}}".format(repo.git.describe('--tags', '--abbrev=0'))
 
-            print("{0} ({1}{2}{3}{4}{5})".format(name,
+            print("{0} ({1}{2}{3} {4} {5})".format(name,
                                                  rev,
                                                  dirty,
                                                  staged,
