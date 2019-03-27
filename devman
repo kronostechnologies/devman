@@ -301,7 +301,13 @@ class DevMan:
     # repo actions
     #
     def clone(self):
-        self.iter_repos(create=True)
+        repos = iter(self.iter_repos(create=True))
+        while True:
+            try:
+                next(repos)
+            except StopIteration:
+                break
+
 
     # checkout branch
     def co(self, branch):
