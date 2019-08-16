@@ -263,7 +263,7 @@ class DevMan:
                 except NoSuchPathError:
                     if create:
                         try:
-                            print("Cloning {}".format(repo_name))
+                            print("{}: cloning".format(repo_name))
                             this_repo = Repo.clone_from(
                                 repo_url, repo_path,
                                 progress=DisProgress()
@@ -322,7 +322,7 @@ class DevMan:
             if remote_branch in remote_branches:
                 # we are not already on this branch
                 if branch != current_branch:
-                    print("Checking out {} on {}".format(branch, name))
+                    print("{}: checking out {}".format(branch, name))
                     if branch in local_branches:
                         repo.git.checkout(branch)
                     else:
@@ -337,7 +337,7 @@ class DevMan:
                 repo.remotes.origin.fetch(prune=False, progress=DisProgress())
             except GitCommandError as e:
                 if e.status == 128:
-                    print("Error: Can't access repository {} on remote.".format(
+                    print("{}: error: can't access repository on remote.".format(
                         name))
                 else:
                     raise e
@@ -438,7 +438,7 @@ class DevMan:
 
     def ff(self):
         for name, path, url, repo in self.iter_repos():
-            print("Fast-forward from origin: {}".format(name))
+            print("{}: fast-forward from origin".format(name))
             if not repo.head.is_detached:
                 cur_branch = repo.head.reference.name
             else:
@@ -459,9 +459,9 @@ class DevMan:
         for name, path, url, repo in self.iter_repos():
             try:
                 if prune:
-                    print("Fetch prune: {}".format(name))
+                    print("{}: fetch prune ".format(name))
                 else:
-                    print("Fetch: {} ".format(name))
+                    print("{}: fetch ".format(name))
                 repo.remotes.origin.fetch(prune=prune, progress=DisProgress())
             except AssertionError as e:
                 if prune:
@@ -479,8 +479,8 @@ class DevMan:
             print("exec expects --exec option. See `devman exec --help`")
         else:
             for name, path, url, repo in self.iter_repos():
-                os.chdir(path)
-                os.system(cmd)
+                print("{}: execute command {}".format(name, cmd))
+                subprocess.Popen(cmd, cwd=path, shell=True).communicate()
 
     def ls(self):
         print('------------------------------------------------')
