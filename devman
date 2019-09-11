@@ -278,7 +278,7 @@ class DevMan:
                             else:
                                 raise e
                     else:
-                        print("Error: Repository {} doesn't exist. Please use git clone first.".format(repo_name))
+                        print("{}: not cloned, skipped".format(repo_name))
 
     # Load git repos definition from yaml file
     # Merge configuration layer from default config
@@ -451,7 +451,7 @@ class DevMan:
                 if e.status == 1:
                     print("Error: Repository {} or branch {} doesn't exist on remote.".format(name, cur_branch))
                 elif e.status == 2:
-                    print("Error: Branch {} doesn't exist on remote. Please use git push first.".format(cur_branch))
+                    print("Error: Branch {} doesn't exist on remote. Please push first.".format(cur_branch))
                 else:
                     raise e
 
