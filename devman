@@ -10,10 +10,8 @@ from git import NoSuchPathError
 from git import Repo
 from git.util import RemoteProgress
 
-try:
-    from ConfigParser import SafeConfigParser
-except ImportError:
-    from configparser import SafeConfigParser
+from configparser import ConfigParser
+
 import yaml
 import subprocess
 import pprint as pp
@@ -542,7 +540,7 @@ class Conf:
         self.override = self.load_conf_file(override_path)
 
     def load_conf_file(self, filename):
-        parser = SafeConfigParser()
+        parser = ConfigParser()
         parser.read(filename)
         conf = {}
         for section_name in parser.sections():
