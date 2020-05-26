@@ -6,3 +6,4 @@ devman.local.conf
 *.pyc
 .idea/
 .tags
+.venv

@@ -1,21 +1,22 @@
 #!/bin/bash
 set -e
-DOT=$(dirname $0)
 
-if [ -f "$(pwd)/devman.conf" ];
+DOT="$(dirname "$([[ "$(uname)" == 'Darwin' ]] && realpath "$0" || readlink -f "$0")")"
+
+if [ -e "$HOME/.config/devman/devman.conf" ];
 then
   conf="-v $(pwd)/devman.conf:/app/devman.conf:ro"
-elif [ -f "$DOT/devman.conf" ]
+elif [ -e "$DOT/devman.conf" ]
 then
   conf="-v $DOT/devman.conf:/app/devman.conf:ro"
 else
   conf=""
 fi
 
-if [ -f "$(pwd)/repos.yaml" ];
+if [ -e "$HOME/.config/devman/repos.yaml" ];
 then
   repos="-v $(pwd)/repos.yaml:/app/repos.yaml:ro"
-elif [ -f "${DOT}/repos.yaml" ];
+elif [ -e "${DOT}/repos.yaml" ];
 then
   repos="-v ${DOT}/repos.yaml:/app/repos.yaml:ro"
 else
@@ -36,12 +37,12 @@ then
   ssh_conf="-v $HOME/.ssh/:/home/$USER/.ssh/:ro"
 fi
 
-if [ ! -z "$SSH_AUTH_SOCK" ]
+if [ -n "$SSH_AUTH_SOCK" ]
 then
   ssh_agent="-v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent";
 fi
 
-docker run --rm \
+docker run -it --rm \
   -u=$UID:$(id -g $USER) \
   -v /etc/passwd:/etc/passwd:ro \
   -v /etc/group:/etc/group:ro \
@@ -50,5 +51,4 @@ docker run --rm \
   $repos \
   $ssh_conf \
   $ssh_agent \
-  -it devman "$@"
-
+  -it kronostechnologies/devman "$@"
