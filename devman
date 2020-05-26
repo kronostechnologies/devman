@@ -1,4 +1,4 @@
 #!/bin/bash
-DOTPATH=$(dirname $([[ "$(uname)" == 'Darwin' ]] && realpath "$0" || readlink -f "$0"))
+DOTPATH="$(dirname "$(if [[ "$(uname)" == 'Darwin' ]]; then (readlink "$0" || echo "$0"); else readlink -f "$0"; fi)")"
 cd "${DOTPATH}"
 pipenv run ./devman.py "${@}"
