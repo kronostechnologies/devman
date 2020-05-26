@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+gitdb = "==4.0.5"
+GitPython = "==3.1.2"
+PyYAML = "==5.3.1"
+smmap = "==3.0.4"
+
+[dev-packages]
+
+[requires]
+python_version = "3"

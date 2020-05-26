@@ -1,7 +1,10 @@
-FROM python:alpine
+FROM python:3.7-alpine
 RUN apk --update --no-cache add git openssh-client
-RUN pip install gitpython --upgrade && pip install pyyaml --upgrade
-COPY devman /app/devman
-COPY devman.conf /app/devman.conf
+
+COPY requirements.txt /app/
+RUN pip3 install -r /app/requirements.txt
+
+COPY devman.py /app/
+
 WORKDIR /app
-entrypoint [ "python" , "devman" ]
+ENTRYPOINT ["python3" , "devman.py"]
