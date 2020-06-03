@@ -7,4 +7,4 @@ if ! command -v pipenv; then
   python3 -m pip install pipenv
 fi
 
-pipenv install
+PIPENV_IGNORE_VIRTUALENVS=1 pipenv install
