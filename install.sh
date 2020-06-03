@@ -8,3 +8,5 @@ if ! command -v pipenv; then
 fi
 
 PIPENV_IGNORE_VIRTUALENVS=1 pipenv install
+
+ln -nsf "$(pwd)/devman" "${HOME}/bin/devman"
