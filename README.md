@@ -1,3 +1,5 @@
+**This projet is no longer maintaint or used. There is no recommended replacement. Learn the git CLI."
+
 devman
 ======
 Manage your git repositories with your Workflow in mind.
